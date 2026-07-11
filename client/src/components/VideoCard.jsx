@@ -77,7 +77,14 @@ const VideoCard = ({ video, horizontal = false }) => {
     setIsHovered(false);
   };
 
-  const categoryName = video.category?.name || (typeof video.category === 'string' ? video.category : 'Video');
+  let categoryName = 'Video';
+  if (video.category) {
+    if (typeof video.category === 'object' && video.category.name) {
+      categoryName = video.category.name;
+    } else if (typeof video.category === 'string' && !/^[0-9a-fA-F]{24}$/.test(video.category)) {
+      categoryName = video.category;
+    }
+  }
   const isHD = video.duration > 120; // Mock HD/4K badge based on video duration
 
   if (horizontal) {

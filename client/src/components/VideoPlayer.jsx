@@ -28,6 +28,7 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [autoplay, setAutoplay] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState(16 / 9);
 
   // Toggle Play / Pause
   const togglePlay = () => {
@@ -61,6 +62,11 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
+      const width = videoRef.current.videoWidth;
+      const height = videoRef.current.videoHeight;
+      if (width && height) {
+        setAspectRatio(width / height);
+      }
     }
   };
 
@@ -251,7 +257,8 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
       ref={containerRef}
       onMouseMove={triggerControlsVisibility}
       onMouseLeave={() => isPlaying && setShowControls(false)}
-      className="relative w-full aspect-video rounded-3xl bg-black overflow-hidden group select-none shadow-2xl border border-white/5"
+      style={{ aspectRatio: aspectRatio }}
+      className="relative w-full max-h-[75vh] mx-auto rounded-3xl bg-black overflow-hidden group select-none shadow-2xl border border-white/5"
     >
       <video
         ref={videoRef}

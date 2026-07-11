@@ -21,6 +21,7 @@ import {
   Eye,
   Calendar
 } from 'lucide-react';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useToast } from '../context/ToastContext';
 
 const Watch = () => {
@@ -30,6 +31,7 @@ const Watch = () => {
   const { showToast } = useToast();
 
   const [video, setVideo] = useState(null);
+  useDocumentTitle(video ? video.title : 'Watch Video');
   const [loading, setLoading] = useState(true);
   const [relatedVideos, setRelatedVideos] = useState([]);
   
@@ -82,7 +84,9 @@ const Watch = () => {
   // Handle Like/Dislike click (Optimistic UI update)
   const handleReaction = async (type) => {
     if (!isAuthenticated) {
-      showToast('Please log in to react to this video', 'error');
+      if (window.confirm('Sign in to react to this video. Sign in now?')) {
+        navigate('/login');
+      }
       return;
     }
 
@@ -143,7 +147,9 @@ const Watch = () => {
   // Handle Subscription toggle
   const handleSubscribe = async () => {
     if (!isAuthenticated) {
-      showToast('Please log in to subscribe to this channel', 'error');
+      if (window.confirm('Sign in to subscribe to this channel. Sign in now?')) {
+        navigate('/login');
+      }
       return;
     }
     if (video.owner?._id === user._id) {
@@ -165,18 +171,41 @@ const Watch = () => {
     }
   };
 
+  // Helper for clipboard copy fallback in non-secure/HTTP environments
+  const fallbackCopy = (text) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('Video link copied to clipboard!', 'success');
+    } catch (err) {
+      showToast('Failed to copy link.', 'error');
+    }
+    document.body.removeChild(textArea);
+  };
+
   // Share link handler
   const handleShare = () => {
     const shareUrl = window.location.href;
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => showToast('Video link copied to clipboard!', 'success'))
-      .catch(() => showToast('Failed to copy link.', 'error'));
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => showToast('Video link copied to clipboard!', 'success'))
+        .catch(() => fallbackCopy(shareUrl));
+    } else {
+      fallbackCopy(shareUrl);
+    }
   };
 
   // Report video handler
   const handleReportVideo = async () => {
     if (!isAuthenticated) {
-      showToast('Please log in to report content', 'error');
+      if (window.confirm('Sign in to report content. Sign in now?')) {
+        navigate('/login');
+      }
       return;
     }
     const reason = prompt('Please enter the reason for reporting this video:');

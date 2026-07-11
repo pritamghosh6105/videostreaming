@@ -51,6 +51,7 @@ export const uploadOnCloudinary = async (localFilePath, resourceType = 'auto') =
       return {
         url: response.secure_url,
         publicId: response.public_id,
+        duration: response.duration,
       };
     } else {
       // Local fallback
@@ -75,6 +76,7 @@ export const uploadOnCloudinary = async (localFilePath, resourceType = 'auto') =
       return {
         url: `/uploads/${fileName}`,
         publicId: fileName,
+        duration: 15,
       };
     }
   } catch (error) {

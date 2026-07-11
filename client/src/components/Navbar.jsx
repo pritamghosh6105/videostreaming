@@ -44,6 +44,7 @@ const Navbar = ({ toggleSidebar }) => {
   // Auto-suggest states
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
@@ -131,19 +132,26 @@ const Navbar = ({ toggleSidebar }) => {
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
+    setIsListening(true);
     showToast('Listening for search query...', 'info');
     recognition.start();
 
     recognition.onresult = (event) => {
       const voiceResult = event.results[0][0].transcript;
       setSearchQuery(voiceResult);
+      setIsListening(false);
       showToast(`Searching for: "${voiceResult}"`, 'success');
       navigate(`/search?q=${encodeURIComponent(voiceResult.trim())}`);
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
+      setIsListening(false);
       showToast('Could not understand. Please try again.', 'error');
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
     };
   };
 
@@ -277,8 +285,11 @@ const Navbar = ({ toggleSidebar }) => {
 
       {/* Middle: Search Box */}
       <form ref={searchRef} onSubmit={handleSearchSubmit} className="hidden sm:flex items-center flex-grow max-w-lg mx-6 relative group">
+        <label htmlFor="searchBox" className="sr-only">Search movies, creators, or tags</label>
         <div className="w-full flex items-center relative">
           <input
+            id="searchBox"
+            name="q"
             type="text"
             placeholder="Search movies, creator, tags..."
             value={searchQuery}
@@ -295,7 +306,9 @@ const Navbar = ({ toggleSidebar }) => {
               type="button"
               onClick={startVoiceSearch}
               title="Voice Search"
-              className="p-1.5 rounded-full hover:bg-brand-primary/10 text-brand-muted hover:text-brand-text transition-colors cursor-pointer"
+              className={`p-1.5 rounded-full hover:bg-brand-primary/10 transition-colors cursor-pointer ${
+                isListening ? 'text-red-500 animate-pulse bg-red-500/10' : 'text-brand-muted hover:text-brand-text'
+              }`}
             >
               <Mic size={16} />
             </button>

@@ -29,6 +29,7 @@ import LikedVideos from './pages/LikedVideos';
 import PlaylistDetail from './pages/PlaylistDetail';
 import Channels from './pages/Channels';
 import Trending from './pages/Trending';
+import NotFound from './pages/NotFound';
 
 // Setup TanStack Query Client
 const queryClient = new QueryClient({
@@ -76,6 +77,7 @@ const AppContent = () => {
             <Route path="/playlist/:id" element={<PlaylistDetail />} />
             <Route path="/channels" element={<Channels />} />
             <Route path="/feed/trending" element={<Trending />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>

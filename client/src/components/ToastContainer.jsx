@@ -6,22 +6,22 @@ const ToastContainer = ({ toasts, removeToast }) => {
     switch (type) {
       case 'success':
         return {
-          bg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 dark:text-emerald-400',
+          bg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
           icon: CheckCircle,
         };
       case 'error':
         return {
-          bg: 'bg-youtube-red/10 border-youtube-red/20 text-youtube-lightRed',
+          bg: 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400',
           icon: AlertCircle,
         };
       case 'warning':
         return {
-          bg: 'bg-amber-500/10 border-amber-500/20 text-amber-500',
+          bg: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
           icon: AlertTriangle,
         };
       default:
         return {
-          bg: 'bg-blue-500/10 border-blue-500/20 text-blue-500',
+          bg: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
           icon: Info,
         };
     }

@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Play, Eye, EyeOff, Mail, Lock, User, FileText, Image, Smile } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Register = () => {
+  useDocumentTitle('Create Channel');
   const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
   const { showToast } = useToast();
@@ -100,9 +102,11 @@ const Register = () => {
           {/* Row 1: Full name & Email */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Full Name</label>
+              <label htmlFor="fullName" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Full Name</label>
               <div className="relative">
                 <input
+                  id="fullName"
+                  name="fullName"
                   type="text"
                   required
                   placeholder="e.g. John Doe"
@@ -115,9 +119,11 @@ const Register = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Email Address</label>
+              <label htmlFor="email" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Email Address</label>
               <div className="relative">
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   required
                   placeholder="e.g. user@domain.com"
@@ -133,9 +139,11 @@ const Register = () => {
           {/* Row 2: Username & Password */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Username</label>
+              <label htmlFor="username" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Username</label>
               <div className="relative">
                 <input
+                  id="username"
+                  name="username"
                   type="text"
                   required
                   placeholder="e.g. mychannel"
@@ -148,9 +156,11 @@ const Register = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Password</label>
+              <label htmlFor="registerPassword" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Password</label>
               <div className="relative">
                 <input
+                  id="registerPassword"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="At least 6 chars..."
@@ -172,9 +182,11 @@ const Register = () => {
 
           {/* Bio Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Channel Bio</label>
+            <label htmlFor="bio" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Channel Bio</label>
             <div className="relative">
               <textarea
+                id="bio"
+                name="bio"
                 placeholder="Tell your viewers who you are..."
                 rows="2"
                 value={bio}
@@ -187,9 +199,11 @@ const Register = () => {
           {/* File Picker Row: Avatar & Banner */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Avatar / Logo</span>
-              <label className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
+              <label htmlFor="avatarInput" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1 cursor-pointer">Avatar / Logo</label>
+              <label htmlFor="avatarInput" className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
                 <input
+                  id="avatarInput"
+                  name="avatar"
                   type="file"
                   accept="image/*"
                   onChange={(e) => setAvatar(e.target.files[0])}
@@ -204,9 +218,11 @@ const Register = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Channel Banner</span>
-              <label className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
+              <label htmlFor="bannerInput" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1 cursor-pointer">Channel Banner</label>
+              <label htmlFor="bannerInput" className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
                 <input
+                  id="bannerInput"
+                  name="banner"
                   type="file"
                   accept="image/*"
                   onChange={(e) => setBanner(e.target.files[0])}

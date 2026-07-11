@@ -48,10 +48,16 @@ export const getPlaylistById = async (req, res, next) => {
       .populate('owner', 'fullName username avatar')
       .populate({
         path: 'videos',
-        populate: {
-          path: 'owner',
-          select: 'fullName username avatar',
-        },
+        populate: [
+          {
+            path: 'owner',
+            select: 'fullName username avatar',
+          },
+          {
+            path: 'category',
+            select: 'name slug',
+          }
+        ],
       });
 
     if (!playlist) {

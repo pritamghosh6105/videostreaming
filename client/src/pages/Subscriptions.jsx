@@ -6,7 +6,10 @@ import { VideoGridSkeleton } from '../components/Skeletons';
 import { useNavigate, Link } from 'react-router-dom';
 import { Tv, Users } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Subscriptions = () => {
+  useDocumentTitle('Subscriptions');
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 

@@ -21,6 +21,7 @@ import adminRouter from './routes/admin.routes.js';
 import categoryRouter from './routes/category.routes.js';
 import communityRouter from './routes/community.routes.js';
 import aiRouter from './routes/ai.routes.js';
+import searchRouter from './routes/search.routes.js';
 
 // Import error handler
 import { errorHandler } from './middlewares/error.middleware.js';
@@ -74,6 +75,7 @@ app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/community', communityRouter);
 app.use('/api/v1/ai', aiRouter);
+app.use('/api/v1/search', searchRouter);
 
 // Health check API
 app.get('/api/v1/health', (req, res) => {

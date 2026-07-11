@@ -22,7 +22,10 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Home = () => {
+  useDocumentTitle('Cinematic Streams');
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
@@ -405,9 +408,10 @@ const Home = () => {
         <div className="flex gap-2.5 overflow-x-auto pb-2.5 scrollbar-none select-none sticky top-16 bg-brand-bg/80 backdrop-blur-md z-10 py-2">
           <button
             onClick={() => setActiveCategory('all')}
+            aria-pressed={activeCategory === 'all'}
             className={`px-5 py-2 rounded-xl text-xs font-black tracking-wider uppercase whitespace-nowrap transition-all duration-300 border ${
               activeCategory === 'all'
-                ? 'bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary-glow'
+                ? 'bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary-glow active'
                 : 'bg-brand-card hover:bg-black/5 dark:hover:bg-white/10 border-brand-border text-brand-muted hover:text-brand-text'
             }`}
           >
@@ -417,9 +421,10 @@ const Home = () => {
             <button
               key={category._id}
               onClick={() => setActiveCategory(category.slug)}
+              aria-pressed={activeCategory === category.slug}
               className={`px-5 py-2 rounded-xl text-xs font-black tracking-wider uppercase whitespace-nowrap transition-all duration-300 border ${
                 activeCategory === category.slug
-                  ? 'bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary-glow'
+                  ? 'bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary-glow active'
                   : 'bg-brand-card hover:bg-black/5 dark:hover:bg-white/10 border-brand-border text-brand-muted hover:text-brand-text'
               }`}
             >

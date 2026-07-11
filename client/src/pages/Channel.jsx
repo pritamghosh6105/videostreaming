@@ -24,11 +24,14 @@ import {
   FileText
 } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Channel = () => {
   const { username } = useParams();
   const { user, isAuthenticated, updateProfile, updateAvatar, updateBanner } = useAuth();
 
   const [channel, setChannel] = useState(null);
+  useDocumentTitle(channel ? `${channel.fullName} (@${channel.username})` : 'Channel Profile');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('videos'); // videos, playlists, community, about
   const [videos, setVideos] = useState([]);

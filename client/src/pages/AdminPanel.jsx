@@ -35,7 +35,10 @@ import {
   Cell
 } from 'recharts';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const AdminPanel = () => {
+  useDocumentTitle('System Admin Control Center');
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();

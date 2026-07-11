@@ -4,7 +4,10 @@ import VideoCard from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
 import { Flame } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Trending = () => {
+  useDocumentTitle('Trending Cinematic Video Releases');
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 

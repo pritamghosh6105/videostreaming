@@ -145,6 +145,23 @@ export const getAllVideos = async (req, res, next) => {
 
     pipeline.push({ $unwind: '$ownerDetails' });
 
+    // Join with category info
+    pipeline.push({
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryDetails',
+      },
+    });
+
+    pipeline.push({
+      $unwind: {
+        path: '$categoryDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    });
+
     // Project fields to keep response light and clean
     pipeline.push({
       $project: {
@@ -159,13 +176,17 @@ export const getAllVideos = async (req, res, next) => {
         isPublished: 1,
         createdAt: 1,
         updatedAt: 1,
-        category: 1,
         tags: 1,
         owner: {
           _id: '$ownerDetails._id',
           fullName: '$ownerDetails.fullName',
           username: '$ownerDetails.username',
           avatar: '$ownerDetails.avatar',
+        },
+        category: {
+          _id: '$categoryDetails._id',
+          name: '$categoryDetails.name',
+          slug: '$categoryDetails.slug',
         },
       },
     });
@@ -405,10 +426,16 @@ export const getWatchHistory = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).populate({
       path: 'watchHistory',
-      populate: {
-        path: 'owner',
-        select: 'fullName username avatar',
-      },
+      populate: [
+        {
+          path: 'owner',
+          select: 'fullName username avatar',
+        },
+        {
+          path: 'category',
+          select: 'name slug',
+        }
+      ],
     });
 
     res.json({
@@ -467,6 +494,7 @@ export const getTrendingVideos = async (req, res, next) => {
     // Trending algorithm: Sort by views desc, but prioritize newer videos
     const videos = await Video.find({ isPublished: true })
       .populate('owner', 'fullName username avatar')
+      .populate('category', 'name slug')
       .sort({ views: -1, createdAt: -1 })
       .limit(10);
 
@@ -500,6 +528,7 @@ export const getRecommendedVideos = async (req, res, next) => {
           _id: { $nin: user.watchHistory },
         })
           .populate('owner', 'fullName username avatar')
+          .populate('category', 'name slug')
           .sort({ views: -1 })
           .limit(12);
       }
@@ -517,6 +546,7 @@ export const getRecommendedVideos = async (req, res, next) => {
         _id: { $nin: excludeIds },
       })
         .populate('owner', 'fullName username avatar')
+        .populate('category', 'name slug')
         .sort({ views: -1 })
         .limit(12 - videos.length);
 
@@ -554,6 +584,7 @@ export const getRelatedVideos = async (req, res, next) => {
       ],
     })
       .populate('owner', 'fullName username avatar')
+      .populate('category', 'name slug')
       .sort({ views: -1 })
       .limit(8);
 
@@ -565,6 +596,7 @@ export const getRelatedVideos = async (req, res, next) => {
         _id: { $nin: excludeIds },
       })
         .populate('owner', 'fullName username avatar')
+        .populate('category', 'name slug')
         .sort({ views: -1 })
         .limit(8 - related.length);
 

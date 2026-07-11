@@ -6,7 +6,10 @@ import { VideoGridSkeleton } from '../components/Skeletons';
 import { useNavigate } from 'react-router-dom';
 import { ThumbsUp } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const LikedVideos = () => {
+  useDocumentTitle('Liked Videos');
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 

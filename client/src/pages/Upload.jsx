@@ -4,7 +4,10 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Upload, FileVideo, Image, CheckCircle, AlertCircle, X } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const UploadVideo = () => {
+  useDocumentTitle('Upload Cinematic Video');
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 

@@ -34,7 +34,10 @@ import {
   CartesianGrid
 } from 'recharts';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Dashboard = () => {
+  useDocumentTitle('Creator Dashboard');
   const { user } = useAuth();
   const { showToast } = useToast();
   

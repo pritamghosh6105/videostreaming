@@ -5,9 +5,12 @@ import VideoCard, { getMediaUrl, formatViews } from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
 import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Search = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  useDocumentTitle(query ? `Search: "${query}"` : 'Search');
 
   const [videos, setVideos] = useState([]);
   const [channels, setChannels] = useState([]);
@@ -37,26 +40,14 @@ const Search = () => {
   const fetchResults = async () => {
     setLoading(true);
     try {
-      // 1. Fetch matching videos
-      let videoUrl = `/videos?query=${encodeURIComponent(query)}&sortBy=${sortBy}&sortType=${sortType}`;
+      let searchUrl = `/search?query=${encodeURIComponent(query)}&sortBy=${sortBy}&sortType=${sortType}`;
       if (activeCategory) {
-        videoUrl += `&category=${activeCategory}`;
+        searchUrl += `&category=${activeCategory}`;
       }
-      const videoRes = await api.get(videoUrl);
-      setVideos(videoRes.data.data || []);
-
-      // 2. Fetch matching channels (limit search to user list endpoint)
-      if (query.trim()) {
-        try {
-          const channelRes = await api.get(`/admin/users?query=${encodeURIComponent(query)}&limit=3`);
-          setChannels(channelRes.data.data || []);
-        } catch (e) {
-          // If admin endpoint is forbidden for non-admins, fallback to empty channels list
-          setChannels([]);
-        }
-      } else {
-        setChannels([]);
-      }
+      const res = await api.get(searchUrl);
+      const data = res.data.data || {};
+      setVideos(data.videos || []);
+      setChannels(data.channels || []);
     } catch (err) {
       console.error('Search results fetch error:', err.message);
     } finally {

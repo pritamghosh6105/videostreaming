@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Play, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Login = () => {
+  useDocumentTitle('Sign In');
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
   const { showToast } = useToast();
@@ -72,9 +74,11 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Email or Username */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Username or Email</label>
+            <label htmlFor="emailOrUsername" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Username or Email</label>
             <div className="relative">
               <input
+                id="emailOrUsername"
+                name="emailOrUsername"
                 type="text"
                 required
                 placeholder="Enter username or email..."
@@ -88,9 +92,11 @@ const Login = () => {
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Password</label>
+            <label htmlFor="password" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1">Password</label>
             <div className="relative">
               <input
+                id="password"
+                name="password"
                 type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="Enter password..."

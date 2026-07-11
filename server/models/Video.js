@@ -68,6 +68,22 @@ const videoSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.__v;
+        delete ret.videoPublicId;
+        delete ret.thumbnailPublicId;
+        return ret;
+      }
+    },
+    toObject: {
+      transform: function (doc, ret) {
+        delete ret.__v;
+        delete ret.videoPublicId;
+        delete ret.thumbnailPublicId;
+        return ret;
+      }
+    }
   }
 );
 

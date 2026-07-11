@@ -188,10 +188,16 @@ export const getLikedVideos = async (req, res, next) => {
     const likedRecords = await Like.find({ likedBy: req.user._id, video: { $ne: null }, type: 'like' })
       .populate({
         path: 'video',
-        populate: {
-          path: 'owner',
-          select: 'fullName username avatar',
-        },
+        populate: [
+          {
+            path: 'owner',
+            select: 'fullName username avatar',
+          },
+          {
+            path: 'category',
+            select: 'name slug',
+          }
+        ],
       });
 
     const videos = likedRecords.map(record => record.video).filter(Boolean);

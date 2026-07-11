@@ -6,7 +6,10 @@ import { VideoGridSkeleton } from '../components/Skeletons';
 import { useNavigate } from 'react-router-dom';
 import { History, Trash2 } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const WatchHistory = () => {
+  useDocumentTitle('Watch History');
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 

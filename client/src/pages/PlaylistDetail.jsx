@@ -6,12 +6,15 @@ import VideoCard, { getMediaUrl } from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
 import { FolderHeart, Trash2, X, Lock, Globe, Play } from 'lucide-react';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const PlaylistDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [playlist, setPlaylist] = useState(null);
+  useDocumentTitle(playlist ? `${playlist.name} (Playlist)` : 'Playlist Detail');
   const [loading, setLoading] = useState(true);
 
   const fetchPlaylistDetails = async () => {

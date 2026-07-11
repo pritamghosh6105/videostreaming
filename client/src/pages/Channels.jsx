@@ -5,7 +5,10 @@ import api from '../services/api';
 import { getMediaUrl, formatViews, formatRelativeTime, formatDuration } from '../components/VideoCard';
 import { useAuth } from '../context/AuthContext';
 
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
 const Channels = () => {
+  useDocumentTitle('Creator Channels');
   const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
