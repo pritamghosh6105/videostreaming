@@ -17,6 +17,7 @@ export const globalSearch = async (req, res, next) => {
     // 1. Search Channels / Users (Public fields only)
     if (query.trim()) {
       channels = await User.find({
+        isBanned: false,
         $or: [
           { username: { $regex: query, $options: 'i' } },
           { fullName: { $regex: query, $options: 'i' } }
@@ -28,6 +29,11 @@ export const globalSearch = async (req, res, next) => {
 
     // 2. Search Videos
     const matchQuery = {};
+    const bannedUsers = await User.find({ isBanned: true }).select('_id');
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
+    matchQuery.owner = { $nin: bannedUserIds };
+
     if (query.trim()) {
       matchQuery.$or = [
         { title: { $regex: query, $options: 'i' } },

@@ -100,6 +100,10 @@ export const getAllVideos = async (req, res, next) => {
 
     const pipeline = [];
 
+    // Get all banned user IDs to exclude their videos
+    const bannedUsers = await User.find({ isBanned: true }).select('_id');
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
     // Filter by visibility (only published videos unless the creator is asking)
     const matchRules = { isPublished: true };
 
@@ -109,6 +113,18 @@ export const getAllVideos = async (req, res, next) => {
       if (req.user && req.user._id.toString() === userId.toString()) {
         delete matchRules.isPublished;
       }
+      // If the requested user is banned, hide all their videos unless requesting user is admin
+      const isRequestedUserBanned = bannedUserIds.some(
+        (bannedId) => bannedId.toString() === userId.toString()
+      );
+      if (isRequestedUserBanned) {
+        const isAdmin = req.user && req.user.role === 'admin';
+        if (!isAdmin) {
+          matchRules.owner = new mongoose.Types.ObjectId(); // matches nothing
+        }
+      }
+    } else {
+      matchRules.owner = { $nin: bannedUserIds };
     }
 
     // Category filter
@@ -238,12 +254,21 @@ export const getVideoById = async (req, res, next) => {
     }
 
     const video = await Video.findById(id)
-      .populate('owner', 'fullName username avatar bio banner')
+      .populate('owner', 'fullName username avatar bio banner isBanned')
       .populate('category', 'name slug');
 
     if (!video) {
       res.status(404);
       throw new Error('Video not found');
+    }
+
+    // If the video owner is banned, deny access unless requesting user is admin
+    if (video.owner && video.owner.isBanned) {
+      const isAdminUser = req.user && req.user.role === 'admin';
+      if (!isAdminUser) {
+        res.status(403);
+        throw new Error('This video is unavailable because the channel is banned');
+      }
     }
 
     // Only allow views if published, or if owner/admin is viewing
@@ -491,8 +516,14 @@ export const deleteWatchHistoryItem = async (req, res, next) => {
 // @access  Public
 export const getTrendingVideos = async (req, res, next) => {
   try {
+    const bannedUsers = await User.find({ isBanned: true }).select('_id');
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
     // Trending algorithm: Sort by views desc, but prioritize newer videos
-    const videos = await Video.find({ isPublished: true })
+    const videos = await Video.find({
+      isPublished: true,
+      owner: { $nin: bannedUserIds },
+    })
       .populate('owner', 'fullName username avatar')
       .populate('category', 'name slug')
       .sort({ views: -1, createdAt: -1 })
@@ -514,6 +545,9 @@ export const getRecommendedVideos = async (req, res, next) => {
   try {
     let videos = [];
 
+    const bannedUsers = await User.find({ isBanned: true }).select('_id');
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
     if (req.user) {
       const user = await User.findById(req.user._id);
       if (user && user.watchHistory && user.watchHistory.length > 0) {
@@ -521,11 +555,12 @@ export const getRecommendedVideos = async (req, res, next) => {
         const historyVideos = await Video.find({ _id: { $in: user.watchHistory } });
         const categories = historyVideos.map((v) => v.category).filter(Boolean);
 
-        // Find videos in those categories, excluding already watched ones
+        // Find videos in those categories, excluding already watched ones and banned users
         videos = await Video.find({
           isPublished: true,
           category: { $in: categories },
           _id: { $nin: user.watchHistory },
+          owner: { $nin: bannedUserIds },
         })
           .populate('owner', 'fullName username avatar')
           .populate('category', 'name slug')
@@ -544,6 +579,7 @@ export const getRecommendedVideos = async (req, res, next) => {
       const popularVideos = await Video.find({
         isPublished: true,
         _id: { $nin: excludeIds },
+        owner: { $nin: bannedUserIds },
       })
         .populate('owner', 'fullName username avatar')
         .populate('category', 'name slug')
@@ -575,9 +611,13 @@ export const getRelatedVideos = async (req, res, next) => {
       throw new Error('Video not found');
     }
 
+    const bannedUsers = await User.find({ isBanned: true }).select('_id');
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
     let related = await Video.find({
       _id: { $ne: id },
       isPublished: true,
+      owner: { $nin: bannedUserIds },
       $or: [
         { category: video.category },
         { tags: { $in: video.tags } },
@@ -594,6 +634,7 @@ export const getRelatedVideos = async (req, res, next) => {
       const fallbackVideos = await Video.find({
         isPublished: true,
         _id: { $nin: excludeIds },
+        owner: { $nin: bannedUserIds },
       })
         .populate('owner', 'fullName username avatar')
         .populate('category', 'name slug')

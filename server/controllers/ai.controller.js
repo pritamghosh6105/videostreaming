@@ -18,10 +18,14 @@ export const chatWithAI = async (req, res, next) => {
     const cleanedQuery = message.replace(/[^\w\s]/g, '').trim();
     let groundedVideos = [];
 
+    const bannedUsers = await User.find({ isBanned: true }).select('_id');
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
     // If query has keywords, do a search
     if (cleanedQuery.length > 2) {
       groundedVideos = await Video.find({
         isPublished: true,
+        owner: { $nin: bannedUserIds },
         $or: [
           { title: { $regex: cleanedQuery, $options: 'i' } },
           { description: { $regex: cleanedQuery, $options: 'i' } },
@@ -34,7 +38,10 @@ export const chatWithAI = async (req, res, next) => {
 
     // Fallback: If no search matches, get the most viewed videos
     if (groundedVideos.length === 0) {
-      groundedVideos = await Video.find({ isPublished: true })
+      groundedVideos = await Video.find({
+        isPublished: true,
+        owner: { $nin: bannedUserIds },
+      })
         .sort({ views: -1 })
         .limit(3)
         .populate('owner', 'username');

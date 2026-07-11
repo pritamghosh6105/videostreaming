@@ -104,11 +104,6 @@ export const toggleUserBan = async (req, res, next) => {
     user.isBanned = !user.isBanned;
     await user.save();
 
-    // If user is banned, unpublish all their videos
-    if (user.isBanned) {
-      await Video.updateMany({ owner: id }, { $set: { isPublished: false } });
-    }
-
     res.json({
       success: true,
       message: `User has been successfully ${user.isBanned ? 'banned' : 'unbanned'}`,

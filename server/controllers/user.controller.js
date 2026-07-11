@@ -322,6 +322,15 @@ export const getChannelProfile = async (req, res, next) => {
       throw new Error('Channel not found');
     }
 
+    // Block access if channel is banned, unless the requester is an admin
+    if (channel.isBanned) {
+      const isAdmin = req.user && req.user.role === 'admin';
+      if (!isAdmin) {
+        res.status(403);
+        throw new Error('This channel has been banned');
+      }
+    }
+
     // Fetch subscriber count
     const subscribersCount = await Subscription.countDocuments({ channel: channel._id });
 
@@ -362,11 +371,13 @@ export const getChannelProfile = async (req, res, next) => {
 export const getSubscribedChannels = async (req, res, next) => {
   try {
     const subscriptions = await Subscription.find({ subscriber: req.user._id })
-      .populate('channel', 'fullName username avatar bio');
+      .populate('channel', 'fullName username avatar bio isBanned');
 
     res.json({
       success: true,
-      data: subscriptions.map(sub => sub.channel),
+      data: subscriptions
+        .map(sub => sub.channel)
+        .filter(channel => channel && !channel.isBanned),
     });
   } catch (error) {
     next(error);
