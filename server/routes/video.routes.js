@@ -7,6 +7,7 @@ import {
   deleteVideo,
   getWatchHistory,
   clearWatchHistory,
+  deleteWatchHistoryItem,
   getTrendingVideos,
   getRecommendedVideos,
   getRelatedVideos,
@@ -37,4 +38,8 @@ router.route('/history/watch')
   .get(verifyJWT, getWatchHistory)
   .delete(verifyJWT, clearWatchHistory);
 
+router.route('/history/watch/:videoId')
+  .delete(verifyJWT, deleteWatchHistoryItem);
+
 export default router;
+

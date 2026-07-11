@@ -49,6 +49,15 @@ const WatchHistory = () => {
     }
   };
 
+  const handleDeleteVideo = async (videoId) => {
+    try {
+      await api.delete(`/videos/history/watch/${videoId}`);
+      setVideos((prev) => prev.filter((v) => v._id !== videoId));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to remove video from history');
+    }
+  };
+
   if (loading) return <VideoGridSkeleton count={4} />;
 
   return (
@@ -84,7 +93,22 @@ const WatchHistory = () => {
       ) : (
         <div className="flex flex-col gap-4">
           {videos.map((video) => (
-            <VideoCard key={video._id} video={video} horizontal={true} />
+            <div key={video._id} className="relative group/history flex items-center gap-2 w-full">
+              <div className="flex-1 min-w-0">
+                <VideoCard video={video} horizontal={true} />
+              </div>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteVideo(video._id);
+                }}
+                className="p-2 hover:bg-youtube-red/10 text-brand-muted hover:text-youtube-red rounded-full transition-all cursor-pointer mr-2 shrink-0 md:opacity-0 group-hover/history:opacity-100 focus:opacity-100"
+                title="Remove from watch history"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
           ))}
         </div>
       )}

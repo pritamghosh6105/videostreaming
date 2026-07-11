@@ -35,6 +35,8 @@
 | **GET** | `/:id/related` | Public | Fetch related videos matching category or tags. |
 | **GET** | `/history/watch`| Private | Retrieve chronological user watch history list. |
 | **DELETE**| `/history/watch`| Private | Clear all items from user watch history list. |
+| **DELETE**| `/history/watch/:videoId`| Private | Remove a specific video from user watch history list. |
+
 
 ---
 

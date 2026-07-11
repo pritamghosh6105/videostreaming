@@ -438,6 +438,27 @@ export const clearWatchHistory = async (req, res, next) => {
   }
 };
 
+// @desc    Remove a video from user watch history
+// @route   DELETE /api/v1/videos/history/watch/:videoId
+// @access  Private
+export const deleteWatchHistoryItem = async (req, res, next) => {
+  try {
+    const { videoId } = req.params;
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { watchHistory: videoId },
+    });
+
+    res.json({
+      success: true,
+      message: 'Video removed from watch history',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 // @desc    Get Trending videos (Sort by views/likes and uploaded recently)
 // @route   GET /api/v1/videos/feed/trending
 // @access  Public
