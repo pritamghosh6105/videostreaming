@@ -56,7 +56,7 @@ const Login = () => {
           <div className="p-3 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-pink text-white flex items-center justify-center shadow-lg shadow-brand-primary-glow">
             <Play size={24} fill="white" className="ml-0.5" />
           </div>
-          <h2 className="text-xl md:text-2xl font-black text-white tracking-wider uppercase">
+          <h2 className="text-xl md:text-2xl font-black text-brand-text tracking-wider uppercase">
             Sign In to View<span className="bg-gradient-to-r from-brand-primary to-brand-pink bg-clip-text text-transparent">Flow</span>
           </h2>
           <p className="text-xs text-brand-muted font-semibold mt-1">
@@ -84,7 +84,7 @@ const Login = () => {
                 placeholder="Enter username or email..."
                 value={emailOrUsername}
                 onChange={(e) => setEmailOrUsername(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
+                className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
               />
               <Mail size={15} className="absolute left-4 top-3.5 text-brand-muted" />
             </div>
@@ -102,13 +102,13 @@ const Login = () => {
                 placeholder="Enter password..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-11 pr-12 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
+                className="w-full pl-11 pr-12 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
               />
               <Lock size={15} className="absolute left-4 top-3.5 text-brand-muted" />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-3.5 text-brand-muted hover:text-white transition-colors cursor-pointer"
+                className="absolute right-4 top-3.5 text-brand-muted hover:text-brand-text transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>

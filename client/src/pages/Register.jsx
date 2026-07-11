@@ -82,7 +82,7 @@ const Register = () => {
           <div className="p-3 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-pink text-white flex items-center justify-center shadow-lg shadow-brand-primary-glow animate-float">
             <Play size={24} fill="white" className="ml-0.5" />
           </div>
-          <h2 className="text-xl md:text-2xl font-black text-white tracking-wider uppercase">
+          <h2 className="text-xl md:text-2xl font-black text-brand-text tracking-wider uppercase">
             Create Channel
           </h2>
           <p className="text-xs text-brand-muted font-semibold mt-1">
@@ -112,7 +112,7 @@ const Register = () => {
                   placeholder="e.g. John Doe"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
+                  className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
                 />
                 <User size={15} className="absolute left-4 top-3.5 text-brand-muted" />
               </div>
@@ -129,7 +129,7 @@ const Register = () => {
                   placeholder="e.g. user@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
+                  className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
                 />
                 <Mail size={15} className="absolute left-4 top-3.5 text-brand-muted" />
               </div>
@@ -149,7 +149,7 @@ const Register = () => {
                   placeholder="e.g. mychannel"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
+                  className="w-full pl-11 pr-4 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
                 />
                 <Smile size={15} className="absolute left-4 top-3.5 text-brand-muted" />
               </div>
@@ -166,13 +166,13 @@ const Register = () => {
                   placeholder="At least 6 chars..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
+                  className="w-full pl-11 pr-12 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold"
                 />
                 <Lock size={15} className="absolute left-4 top-3.5 text-brand-muted" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 text-brand-muted hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-4 top-3.5 text-brand-muted hover:text-brand-text transition-colors cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -191,7 +191,7 @@ const Register = () => {
                 rows="2"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full px-4 py-3 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold resize-none"
+                className="w-full px-4 py-3 text-xs rounded-xl bg-black/5 dark:bg-white/5 border border-brand-border text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all font-semibold resize-none"
               />
             </div>
           </div>
@@ -200,7 +200,7 @@ const Register = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="avatarInput" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1 cursor-pointer">Avatar / Logo</label>
-              <label htmlFor="avatarInput" className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
+              <label htmlFor="avatarInput" className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-brand-border bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
                 <input
                   id="avatarInput"
                   name="avatar"
@@ -219,7 +219,7 @@ const Register = () => {
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="bannerInput" className="text-[10px] font-black text-brand-primary uppercase tracking-widest pl-1 cursor-pointer">Channel Banner</label>
-              <label htmlFor="bannerInput" className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
+              <label htmlFor="bannerInput" className="flex items-center justify-center p-3.5 rounded-xl border border-dashed border-brand-border bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 hover:border-brand-primary/30 transition-all text-xs font-bold text-brand-muted cursor-pointer truncate">
                 <input
                   id="bannerInput"
                   name="banner"

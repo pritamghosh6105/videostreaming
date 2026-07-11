@@ -27,7 +27,7 @@ const NotFound = () => {
 
         {/* Cinematic Heading & Subtitle */}
         <div className="flex flex-col gap-2">
-          <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wide">
+          <h2 className="text-xl md:text-2xl font-black text-brand-text uppercase tracking-wide">
             Lost in the Stream
           </h2>
           <p className="text-xs md:text-sm text-brand-muted font-medium max-w-sm">
@@ -36,7 +36,7 @@ const NotFound = () => {
         </div>
 
         {/* Compass Navigation Indicator */}
-        <div className="w-24 h-24 rounded-full border border-dashed border-brand-border/40 flex items-center justify-center animate-morph-blob bg-white/[0.02]">
+        <div className="w-24 h-24 rounded-full border border-dashed border-brand-border/40 flex items-center justify-center animate-morph-blob bg-black/[0.02] dark:bg-white/[0.02]">
           <Compass className="text-brand-primary animate-spin" style={{ animationDuration: '20s' }} size={36} />
         </div>
 
@@ -51,7 +51,7 @@ const NotFound = () => {
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all duration-300 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-black/5 dark:bg-white/5 border border-brand-border hover:bg-black/10 dark:hover:bg-white/10 text-brand-text text-xs font-black uppercase tracking-wider rounded-2xl transition-all duration-300 cursor-pointer"
           >
             Go Back
           </button>
