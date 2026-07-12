@@ -134,7 +134,15 @@ const Navbar = ({ toggleSidebar }) => {
 
     setIsListening(true);
     showToast('Listening for search query...', 'info');
-    recognition.start();
+    
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+      showToast('Microphone access failed. Please enable microphone permissions.', 'error');
+      return;
+    }
 
     recognition.onresult = (event) => {
       const voiceResult = event.results[0][0].transcript;
@@ -147,7 +155,11 @@ const Navbar = ({ toggleSidebar }) => {
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
-      showToast('Could not understand. Please try again.', 'error');
+      if (event.error === 'not-allowed') {
+        showToast('Microphone access blocked. Please enable microphone permissions in your browser settings.', 'error');
+      } else {
+        showToast('Could not understand speech. Please try again.', 'error');
+      }
     };
 
     recognition.onend = () => {

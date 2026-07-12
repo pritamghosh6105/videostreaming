@@ -10,14 +10,14 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const LikedVideos = () => {
   useDocumentTitle('Liked Videos');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,12 +35,12 @@ const LikedVideos = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       fetchLikedVideos();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
-  if (loading) return <VideoGridSkeleton count={4} />;
+  if (authLoading || loading) return <VideoGridSkeleton count={4} />;
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-4xl mx-auto min-h-screen select-none">

@@ -97,7 +97,7 @@ export const loginUser = async (req, res, next) => {
 
     if (!emailOrUsername || !password) {
       res.status(400);
-      throw new Error('Please enter credentials and password');
+      throw new Error('Please enter your email/username and password');
     }
 
     const user = await User.findOne({
@@ -421,6 +421,35 @@ export const getAllChannels = async (req, res, next) => {
     res.json({
       success: true,
       data: channelsWithDetails,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get current user channel details
+// @route   GET /api/v1/channels/me
+// @access  Private
+export const getCurrentChannelProfile = async (req, res, next) => {
+  try {
+    const channel = await User.findById(req.user._id).select('-password');
+    if (!channel) {
+      res.status(404);
+      throw new Error('Channel not found');
+    }
+    const subscribersCount = await Subscription.countDocuments({ channel: channel._id });
+    const channelsSubscribedTo = await Subscription.countDocuments({ subscriber: channel._id });
+    const videosCount = await Video.countDocuments({ owner: channel._id, isPublished: true });
+
+    res.json({
+      success: true,
+      data: {
+        ...channel.toObject(),
+        subscribersCount,
+        channelsSubscribedTo,
+        isSubscribed: false,
+        videosCount,
+      },
     });
   } catch (error) {
     next(error);

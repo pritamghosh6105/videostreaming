@@ -250,6 +250,7 @@ const Dashboard = () => {
       {/* Tabs */}
       <div className="flex gap-2.5 border-b border-white/5 pb-3.5 select-none">
         <button
+          type="button"
           onClick={() => setActiveTab('videos')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all duration-300 ${
             activeTab === 'videos'
@@ -260,6 +261,7 @@ const Dashboard = () => {
           My Uploads
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('analytics')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all duration-300 ${
             activeTab === 'analytics'

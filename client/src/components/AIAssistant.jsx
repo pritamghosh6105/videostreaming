@@ -335,6 +335,7 @@ const AIAssistant = () => {
       {/* Toggle Button */}
       {!isOpen && (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
           className="flex items-center justify-center h-16 w-16 transition-all duration-300 active:scale-95 group relative cursor-pointer"
           title="Open AI Assistance"
@@ -661,23 +662,31 @@ const AIAssistant = () => {
               </div>
 
               {/* Input Footer */}
-              <div className="p-3 border-t border-light-border/40 dark:border-dark-border/40 bg-white dark:bg-dark-card rounded-b-2xl flex items-center gap-2">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Ask the AI assistance..."
-                  disabled={isLoading}
-                  className="flex-grow bg-light-hover/50 dark:bg-dark-hover/50 border border-light-border/60 dark:border-dark-border/60 rounded-full px-4 py-2.5 text-xs text-light-text dark:text-dark-text focus:outline-none focus:border-youtube-red/60 dark:focus:border-youtube-lightRed/60 focus:ring-2 focus:ring-youtube-red/10 dark:focus:ring-youtube-lightRed/10 transition-all duration-200 placeholder:text-light-muted/70 dark:placeholder:text-dark-muted/70 disabled:opacity-60"
-                />
-                <button
-                  onClick={() => handleSendMessage()}
-                  disabled={!inputValue.trim() || isLoading}
-                  className="p-2.5 rounded-full bg-gradient-to-tr from-youtube-red to-indigo-600 text-white hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-sm flex items-center justify-center shrink-0 border border-white/5 cursor-pointer"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                </button>
+              <div className="p-3 border-t border-light-border/40 dark:border-dark-border/40 bg-white dark:bg-dark-card rounded-b-2xl flex flex-col gap-2">
+                {!isAuthenticated && (
+                  <div className="text-[10px] text-brand-pink font-bold bg-brand-pink/5 px-3 py-1.5 rounded-lg border border-brand-pink/10 self-stretch text-center">
+                    Guest Mode: Requests are rate-limited. Please sign in to experience full features.
+                  </div>
+                )}
+                <div className="flex items-center gap-2 w-full">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Ask the AI assistance..."
+                    disabled={isLoading}
+                    className="flex-grow bg-light-hover/50 dark:bg-dark-hover/50 border border-light-border/60 dark:border-dark-border/60 rounded-full px-4 py-2.5 text-xs text-light-text dark:text-dark-text focus:outline-none focus:border-youtube-red/60 dark:focus:border-youtube-lightRed/60 focus:ring-2 focus:ring-youtube-red/10 dark:focus:ring-youtube-lightRed/10 transition-all duration-200 placeholder:text-light-muted/70 dark:placeholder:text-dark-muted/70 disabled:opacity-60"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSendMessage()}
+                    disabled={!inputValue.trim() || isLoading}
+                    className="p-2.5 rounded-full bg-gradient-to-tr from-youtube-red to-indigo-600 text-white hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-sm flex items-center justify-center shrink-0 border border-white/5 cursor-pointer"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             </>
           )}

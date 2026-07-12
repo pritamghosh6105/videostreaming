@@ -69,11 +69,47 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        delete ret.__v;
+        delete ret.password;
+        delete ret.avatarPublicId;
+        delete ret.bannerPublicId;
+        if (ret._id) {
+          ret.id = ret._id.toString();
+        }
+        return ret;
+      }
+    },
+    toObject: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        delete ret.__v;
+        delete ret.password;
+        delete ret.avatarPublicId;
+        delete ret.bannerPublicId;
+        if (ret._id) {
+          ret.id = ret._id.toString();
+        }
+        return ret;
+      }
+    }
   }
 );
 
-// Encrypt password before saving
+// Encrypt password before saving and apply image fallbacks
 userSchema.pre('save', async function (next) {
+  if (!this.avatar) {
+    this.avatar = 'https://res.cloudinary.com/demo/image/upload/d_avatar.png/avatar.png';
+  }
+  if (!this.banner) {
+    this.banner = 'https://res.cloudinary.com/demo/image/upload/w_1000,ar_16:9,c_fill,g_auto/sample.jpg';
+  }
+  if (this.bio === undefined || this.bio === null) {
+    this.bio = '';
+  }
+
   if (!this.isModified('password')) return next();
   try {
     const salt = await bcrypt.genSalt(10);

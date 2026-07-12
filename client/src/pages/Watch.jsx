@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useToast } from '../context/ToastContext';
+import NotFound from './NotFound';
 
 const Watch = () => {
   const { id } = useParams();
@@ -46,6 +47,7 @@ const Watch = () => {
   // UI state
   const [descExpanded, setDescExpanded] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // Fetch video details
   const fetchVideoDetails = async () => {
@@ -68,9 +70,8 @@ const Watch = () => {
       setSubscribers(data.owner?.subscribersCount || 0);
       setRelatedVideos(relatedRes.data.data || []);
     } catch (err) {
-      console.error('Error loading video Watch details:', err.message);
-      showToast('Failed to load video.', 'error');
-      navigate('/');
+      console.error('Error fetching watch video details:', err.message);
+      setHasError(true);
     } finally {
       setLoading(false);
     }
@@ -235,8 +236,9 @@ const Watch = () => {
     }
   };
 
+  if (hasError) return <NotFound />;
   if (loading) return <WatchPageSkeleton />;
-  if (!video) return <div className="text-center py-20 text-brand-muted font-bold">Video entry not found.</div>;
+  if (!video) return <NotFound />;
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 p-4 md:p-8 max-w-[1700px] mx-auto w-full min-h-screen relative">
@@ -282,6 +284,7 @@ const Watch = () => {
 
             {(!user || user._id !== video.owner?._id) && (
               <button
+                type="button"
                 onClick={handleSubscribe}
                 disabled={subLoading}
                 className={`ml-4 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
@@ -300,6 +303,7 @@ const Watch = () => {
             {/* Likes/Dislikes reaction capsule */}
             <div className="flex items-center bg-black/5 dark:bg-white/5 border border-brand-border rounded-xl overflow-hidden shadow-md">
               <button
+                type="button"
                 onClick={() => handleReaction('like')}
                 className={`flex items-center gap-1.5 px-4.5 py-2.5 hover:bg-black/5 dark:hover:bg-white/10 border-r border-brand-border transition-colors cursor-pointer ${
                   reaction === 'like' ? 'text-brand-primary bg-brand-primary/10' : 'text-brand-muted hover:text-brand-text'
@@ -309,6 +313,7 @@ const Watch = () => {
                 <span>{likes}</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleReaction('dislike')}
                 className={`flex items-center gap-1.5 px-4.5 py-2.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer ${
                   reaction === 'dislike' ? 'text-brand-pink bg-brand-pink/10' : 'text-brand-muted hover:text-brand-text'
@@ -322,6 +327,7 @@ const Watch = () => {
             {/* Save to Playlist */}
             {isAuthenticated && (
               <button
+                type="button"
                 onClick={() => setIsPlaylistModalOpen(true)}
                 className="flex items-center gap-1.5 px-4.5 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-brand-border rounded-xl transition-colors cursor-pointer text-brand-muted hover:text-brand-text"
               >

@@ -28,9 +28,14 @@ export const errorHandler = (err, req, res, next) => {
     console.error(err);
   }
 
-  res.status(statusCode).json({
+  const responseBody = {
     success: false,
     message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-  });
+  };
+
+  if (process.env.NODE_ENV !== 'production') {
+    responseBody.stack = err.stack;
+  }
+
+  res.status(statusCode).json(responseBody);
 };

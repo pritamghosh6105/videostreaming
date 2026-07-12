@@ -23,17 +23,23 @@ import {
 } from 'lucide-react';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { useToast } from '../context/ToastContext';
 
 const Home = () => {
-  useDocumentTitle('Cinematic Streams');
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   
   const [videos, setVideos] = useState([]);
   const [trendingVideos, setTrendingVideos] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+
+  const selectedCategoryName = activeCategory === 'all' 
+    ? '' 
+    : categories.find(c => c.slug === activeCategory)?.name;
+  useDocumentTitle(selectedCategoryName ? `Curated Releases: ${selectedCategoryName}` : 'Cinematic Streams');
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -138,6 +144,9 @@ const Home = () => {
       setPage(nextPage + 1);
     } catch (err) {
       console.error('Error fetching videos:', err.message);
+      if (err.response?.status === 429) {
+        showToast(err.response?.data?.message || 'Too many requests. Please try again later.', 'error');
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -152,6 +161,9 @@ const Home = () => {
       setPosts(res.data.data || []);
     } catch (err) {
       console.error('Error fetching community feed:', err.message);
+      if (err.response?.status === 429) {
+        showToast(err.response?.data?.message || 'Too many requests. Please try again later.', 'error');
+      }
     } finally {
       setPostsLoading(false);
     }
@@ -343,6 +355,8 @@ const Home = () => {
               muted={isMuted}
               loop
               playsInline
+              preload="none"
+              aria-label="Home hero video player"
               className="w-full h-full object-cover opacity-65 md:opacity-75 transition-opacity duration-700"
             />
             {/* Soft Netflix/Apple TV style Gradient Masks */}
@@ -777,9 +791,9 @@ const Home = () => {
 
           <div className="flex flex-col gap-2">
             <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest border-l-2 border-brand-pink pl-2">Legal</h4>
-            <span className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold cursor-pointer">Terms & Conditions</span>
-            <span className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold cursor-pointer">Privacy Charter</span>
-            <span className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold cursor-pointer">Cookie Settings</span>
+            <Link to="#" onClick={(e) => { e.preventDefault(); showToast('Demo: Terms & Conditions coming soon!', 'info'); }} className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Terms & Conditions</Link>
+            <Link to="#" onClick={(e) => { e.preventDefault(); showToast('Demo: Privacy Charter coming soon!', 'info'); }} className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Privacy Charter</Link>
+            <Link to="#" onClick={(e) => { e.preventDefault(); showToast('Demo: Cookie Settings coming soon!', 'info'); }} className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Cookie Settings</Link>
           </div>
 
           <div className="flex flex-col gap-2">

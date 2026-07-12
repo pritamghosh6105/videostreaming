@@ -8,7 +8,7 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 const Register = () => {
   useDocumentTitle('Create Channel');
   const navigate = useNavigate();
-  const { register, isAuthenticated } = useAuth();
+  const { register, logout, isAuthenticated } = useAuth();
   const { showToast } = useToast();
 
   // Form states
@@ -25,12 +25,30 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated]);
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 bg-brand-bg relative select-none">
+        <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl flex flex-col items-center text-center gap-6">
+          <Play className="text-brand-primary h-12 w-12 animate-pulse" />
+          <h2 className="text-2xl font-black text-white">Already Signed In</h2>
+          <p className="text-brand-muted text-sm font-semibold">
+            You are already authenticated. You can head back to the homepage, go to your creator dashboard, or log out of this account.
+          </p>
+          <div className="flex flex-col w-full gap-3 mt-2">
+            <Link to="/" className="w-full py-3 bg-brand-primary text-white font-black text-sm rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform duration-300 flex items-center justify-center">
+              Go to Home
+            </Link>
+            <Link to="/dashboard" className="w-full py-3 bg-white/10 text-white font-black text-sm rounded-2xl hover:bg-white/15 hover:scale-[1.02] active:scale-[0.98] transition-transform duration-300 flex items-center justify-center">
+              Creator Dashboard
+            </Link>
+            <button type="button" onClick={logout} className="w-full py-3 bg-brand-pink/20 hover:bg-brand-pink/30 text-brand-pink font-black text-sm rounded-2xl transition-colors duration-300 cursor-pointer">
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -10,14 +10,14 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Subscriptions = () => {
   useDocumentTitle('Subscriptions');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   const [videos, setVideos] = useState([]);
   const [channels, setChannels] = useState([]);
@@ -46,7 +46,7 @@ const Subscriptions = () => {
       
       // 3. Merge and sort chronologically (newest first)
       const merged = results
-        .flatMap((res) => res.data.data || [])
+        .flatMap((r) => r.data?.data || [])
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       setVideos(merged);
@@ -58,12 +58,12 @@ const Subscriptions = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       fetchSubscriptionsFeed();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
-  if (loading) return <VideoGridSkeleton count={8} />;
+  if (authLoading || loading) return <VideoGridSkeleton count={8} />;
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-[1600px] mx-auto min-h-screen select-none">

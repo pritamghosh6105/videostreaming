@@ -22,11 +22,15 @@ import categoryRouter from './routes/category.routes.js';
 import communityRouter from './routes/community.routes.js';
 import aiRouter from './routes/ai.routes.js';
 import searchRouter from './routes/search.routes.js';
+import channelRouter from './routes/channel.routes.js';
 
 // Import error handler
 import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
+
+// Trust reverse proxies (Render load balancers)
+app.set('trust proxy', 1);
 
 // Log requests
 app.use(morgan('dev'));
@@ -76,6 +80,7 @@ app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/community', communityRouter);
 app.use('/api/v1/ai', aiRouter);
 app.use('/api/v1/search', searchRouter);
+app.use('/api/v1/channels', channelRouter);
 
 // Health check API
 app.get('/api/v1/health', (req, res) => {
@@ -89,6 +94,12 @@ app.get('/api/v1/health', (req, res) => {
 // Serve frontend in production (optional fallback, but we focus on separate deployment)
 app.get('/', (req, res) => {
   res.send('YouTube Video Streaming Platform API Server is Running');
+});
+
+// Catch-all for undefined API routes
+app.use('/api/*', (req, res, next) => {
+  res.status(404);
+  throw new Error(`API endpoint ${req.originalUrl} not found`);
 });
 
 // Error handling middleware

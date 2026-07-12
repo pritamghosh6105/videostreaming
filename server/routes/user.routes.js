@@ -28,6 +28,7 @@ router.get('/c/:username', optionalVerifyJWT, getChannelProfile);
 
 // Private routes
 router.get('/me', verifyJWT, getUserProfile);
+router.get('/current-user', verifyJWT, getUserProfile);
 router.put('/profile', verifyJWT, updateUserProfile);
 router.patch('/avatar', verifyJWT, upload.single('avatar'), updateUserAvatar);
 router.patch('/banner', verifyJWT, upload.single('banner'), updateUserBanner);

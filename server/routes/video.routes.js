@@ -25,6 +25,11 @@ router.get('/:id', optionalVerifyJWT, getVideoById);
 router.get('/:id/related', optionalVerifyJWT, getRelatedVideos);
 
 // Protected routes
+router.post('/', verifyJWT, upload.fields([
+  { name: 'videoFile', maxCount: 1 },
+  { name: 'thumbnail', maxCount: 1 }
+]), uploadVideo);
+
 router.post('/upload', verifyJWT, upload.fields([
   { name: 'videoFile', maxCount: 1 },
   { name: 'thumbnail', maxCount: 1 }

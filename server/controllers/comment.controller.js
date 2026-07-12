@@ -86,14 +86,19 @@ export const getCommentsByVideoId = async (req, res, next) => {
     const { videoId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    let parsedPage = parseInt(page);
+    let parsedLimit = parseInt(limit);
+    if (isNaN(parsedPage) || parsedPage < 1) parsedPage = 1;
+    if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 10;
+
+    const skip = (parsedPage - 1) * parsedLimit;
 
     // Find root comments (parentComment = null)
     const comments = await Comment.find({ video: videoId, parentComment: null })
       .populate('owner', 'fullName username avatar')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parsedLimit);
 
     // Get total count of root comments
     const totalCount = await Comment.countDocuments({ video: videoId, parentComment: null });
@@ -114,8 +119,8 @@ export const getCommentsByVideoId = async (req, res, next) => {
       data: commentsWithRepliesCount,
       pagination: {
         total: totalCount,
-        page: parseInt(page),
-        pages: Math.ceil(totalCount / parseInt(limit)),
+        page: parsedPage,
+        pages: Math.ceil(totalCount / parsedLimit),
       },
     });
   } catch (error) {

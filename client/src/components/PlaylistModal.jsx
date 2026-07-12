@@ -129,7 +129,9 @@ const PlaylistModal = ({ videoId, isOpen, onClose }) => {
               <p className="text-sm text-light-muted dark:text-dark-muted py-2">No playlists created yet.</p>
             ) : (
               playlists.map((playlist) => {
-                const isChecked = playlist.videos.includes(videoId);
+                const isChecked = (playlist.videos || []).some(
+                  (v) => (v._id || v).toString() === videoId.toString()
+                );
                 return (
                   <label
                     key={playlist._id}

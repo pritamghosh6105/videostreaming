@@ -1,5 +1,7 @@
 import Video from '../models/Video.js';
 import User from '../models/User.js';
+import Category from '../models/Category.js';
+import mongoose from 'mongoose';
 
 // @desc    Global search for videos and channels
 // @route   GET /api/v1/search
@@ -44,7 +46,16 @@ export const globalSearch = async (req, res, next) => {
 
     // Category filter
     if (activeCategory) {
-      matchQuery.category = activeCategory;
+      let catId = activeCategory;
+      if (!mongoose.Types.ObjectId.isValid(activeCategory)) {
+        const cat = await Category.findOne({ slug: activeCategory });
+        if (cat) {
+          catId = cat._id;
+        } else {
+          catId = new mongoose.Types.ObjectId(); // Non-matching dummy ObjectId
+        }
+      }
+      matchQuery.category = catId;
     }
 
     // Only return published videos

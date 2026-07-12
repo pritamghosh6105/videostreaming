@@ -98,6 +98,11 @@ export const getAllVideos = async (req, res, next) => {
       sortType = 'desc',
     } = req.query;
 
+    let parsedPage = parseInt(page);
+    let parsedLimit = parseInt(limit);
+    if (isNaN(parsedPage) || parsedPage < 1) parsedPage = 1;
+    if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 12;
+
     const pipeline = [];
 
     // Get all banned user IDs to exclude their videos
@@ -220,9 +225,9 @@ export const getAllVideos = async (req, res, next) => {
     pipeline.push({ $sort: sortStage });
 
     // Pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parsedPage - 1) * parsedLimit;
     pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: parseInt(limit) });
+    pipeline.push({ $limit: parsedLimit });
 
     const videos = await Video.aggregate(pipeline);
     const totalCount = await Video.countDocuments(matchRules);
@@ -232,8 +237,8 @@ export const getAllVideos = async (req, res, next) => {
       data: videos,
       pagination: {
         total: totalCount,
-        page: parseInt(page),
-        pages: Math.ceil(totalCount / parseInt(limit)),
+        page: parsedPage,
+        pages: Math.ceil(totalCount / parsedLimit),
       },
     });
   } catch (error) {
@@ -272,8 +277,9 @@ export const getVideoById = async (req, res, next) => {
     }
 
     // Only allow views if published, or if owner/admin is viewing
+    // Only allow views if published, or if owner/admin is viewing
     if (!video.isPublished) {
-      const isOwner = req.user && req.user._id.toString() === video.owner._id.toString();
+      const isOwner = req.user && video.owner && req.user._id.toString() === video.owner._id.toString();
       const isAdminUser = req.user && req.user.role === 'admin';
       if (!isOwner && !isAdminUser) {
         res.status(403);
@@ -308,27 +314,43 @@ export const getVideoById = async (req, res, next) => {
         userReaction = reaction.type;
       }
 
-      const subRecord = await Subscription.findOne({
-        subscriber: req.user._id,
-        channel: video.owner._id,
-      });
-      isSubscribed = !!subRecord;
+      if (video.owner) {
+        const subRecord = await Subscription.findOne({
+          subscriber: req.user._id,
+          channel: video.owner._id,
+        });
+        isSubscribed = !!subRecord;
+      }
     }
 
     // Get owner's total subscriber count
-    const ownerSubscribersCount = await Subscription.countDocuments({ channel: video.owner._id });
+    const ownerSubscribersCount = video.owner
+      ? await Subscription.countDocuments({ channel: video.owner._id })
+      : 0;
+
+    const responseData = {
+      ...video.toObject(),
+      userReaction,
+      isSubscribed,
+    };
+
+    if (video.owner) {
+      responseData.owner = {
+        ...video.owner.toObject(),
+        subscribersCount: ownerSubscribersCount,
+      };
+    } else {
+      responseData.owner = {
+        fullName: 'Deleted User',
+        username: 'deleted',
+        avatar: '',
+        subscribersCount: 0,
+      };
+    }
 
     res.json({
       success: true,
-      data: {
-        ...video.toObject(),
-        owner: {
-          ...video.owner.toObject(),
-          subscribersCount: ownerSubscribersCount,
-        },
-        userReaction,
-        isSubscribed,
-      },
+      data: responseData,
     });
   } catch (error) {
     next(error);

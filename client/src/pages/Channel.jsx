@@ -69,7 +69,7 @@ const Channel = () => {
 
 
   // Checks if the logged in user is the owner of this channel
-  const isOwner = user && user.username === username.toLowerCase();
+  const isOwner = user && user.username && username && user.username.toLowerCase() === username.toLowerCase();
 
   const fetchChannelPosts = async () => {
     setPostsLoading(true);
@@ -170,6 +170,7 @@ const Channel = () => {
   };
 
   const openEditModal = () => {
+    if (!channel) return;
     setEditName(channel.fullName || '');
     setEditBio(channel.bio || '');
     setIsEditModalOpen(true);
@@ -535,6 +536,7 @@ const Channel = () => {
         {isOwner ? (
           <div className="flex items-center gap-2.5">
             <button
+              type="button"
               onClick={openEditModal}
               className="px-5 py-2 bg-youtube-red hover:bg-youtube-darkRed text-white text-xs font-extrabold rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
             >
@@ -920,6 +922,7 @@ const Channel = () => {
                       {/* Footer Actions (Like, Dislike, Comments) */}
                       <div className="flex items-center gap-1.5 border-t border-light-border/40 dark:border-dark-border/20 pt-3 text-xs font-bold text-light-text dark:text-dark-text">
                         <button
+                          type="button"
                           onClick={() => handlePostReaction(post._id, 'like')}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-light-hover dark:hover:bg-dark-hover transition-colors ${
                             userLiked ? 'text-youtube-red bg-youtube-red/10' : ''
@@ -929,6 +932,7 @@ const Channel = () => {
                           <span>{post.likes?.length || 0}</span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => handlePostReaction(post._id, 'dislike')}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-light-hover dark:hover:bg-dark-hover transition-colors ${
                             userDisliked ? 'text-yellow-500 bg-yellow-500/10' : ''
@@ -938,6 +942,7 @@ const Channel = () => {
                           <span>{post.dislikes?.length || 0}</span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => toggleComments(post._id)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-light-hover dark:hover:bg-dark-hover transition-colors ${
                             openComments[post._id] ? 'text-youtube-red bg-youtube-red/10' : ''

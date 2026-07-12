@@ -10,14 +10,14 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const WatchHistory = () => {
   useDocumentTitle('Watch History');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,10 +35,10 @@ const WatchHistory = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       fetchWatchHistory();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   const handleClearHistory = async () => {
     if (!window.confirm('Clear your entire watch history? This cannot be undone.')) return;
@@ -61,7 +61,7 @@ const WatchHistory = () => {
     }
   };
 
-  if (loading) return <VideoGridSkeleton count={4} />;
+  if (authLoading || loading) return <VideoGridSkeleton count={4} />;
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-4xl mx-auto min-h-screen select-none">
