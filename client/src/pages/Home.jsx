@@ -360,8 +360,8 @@ const Home = () => {
               className="w-full h-full object-cover opacity-65 md:opacity-75 transition-opacity duration-700"
             />
             {/* Soft Netflix/Apple TV style Gradient Masks */}
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-bg via-transparent to-black/30 z-10" />
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-bg/85 via-transparent to-transparent z-10 hidden md:block" />
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/50 dark:from-brand-bg via-transparent to-black/30 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-bg/40 dark:from-brand-bg/85 via-transparent to-transparent z-10 hidden md:block" />
           </div>
 
           {/* Right Arrow Button */}
