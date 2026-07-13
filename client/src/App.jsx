@@ -8,12 +8,13 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ToastProvider } from './context/ToastContext';
 
+// Cold Start Loader Component
+import ColdStartLoader from './components/ColdStartLoader';
+
 // Layout components
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import AIAssistant from './components/AIAssistant';
-
-// Pages
 import Home from './pages/Home';
 import Watch from './pages/Watch';
 import Search from './pages/Search';
@@ -96,6 +97,7 @@ function App() {
           <AuthProvider>
             <NotificationProvider>
               <ToastProvider>
+                <ColdStartLoader />
                 <AppContent />
               </ToastProvider>
             </NotificationProvider>
