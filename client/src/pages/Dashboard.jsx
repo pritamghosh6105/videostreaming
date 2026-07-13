@@ -181,7 +181,7 @@ const Dashboard = () => {
     <div className="flex flex-col gap-6 p-4 md:p-8 w-full max-w-6xl mx-auto min-h-screen relative">
       
       {/* Title Header */}
-      <div className="flex justify-between items-center border-b border-white/5 pb-5 select-none">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/5 pb-5 select-none">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-brand-text tracking-wider uppercase flex items-center gap-2">
             <Sparkles className="text-brand-pink" size={20} />
@@ -194,7 +194,7 @@ const Dashboard = () => {
 
         <Link
           to="/upload"
-          className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-brand-primary to-brand-pink text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-brand-primary-glow cursor-pointer transition-all hover:scale-105 active:scale-95"
+          className="flex items-center justify-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-brand-primary to-brand-pink text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-brand-primary-glow cursor-pointer transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
         >
           <Plus size={14} /> Upload Video
         </Link>
