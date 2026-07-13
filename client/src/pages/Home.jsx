@@ -355,7 +355,7 @@ const Home = () => {
               muted={isMuted}
               loop
               playsInline
-              preload="none"
+              preload="auto"
               aria-label="Home hero video player"
               className="w-full h-full object-cover opacity-65 md:opacity-75 transition-opacity duration-700"
             />

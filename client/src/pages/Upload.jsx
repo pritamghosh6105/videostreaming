@@ -79,6 +79,7 @@ const UploadVideo = () => {
     try {
       await api.post('/videos/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 0, // Disable timeout for large file uploads & Cloudinary transcoding
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total

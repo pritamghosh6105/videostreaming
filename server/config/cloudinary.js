@@ -1,6 +1,9 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Check if credentials are configure
 const isCloudinaryConfigured = () => {

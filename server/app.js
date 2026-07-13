@@ -1,13 +1,10 @@
+import './loadEnv.js';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
-import dotenv from 'dotenv';
-
-// Initialize environment variables
-dotenv.config();
 
 // Import routers
 import userRouter from './routes/user.routes.js';
