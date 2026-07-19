@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Upload, FileVideo, Image, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { Upload, FileVideo, Image, X } from 'lucide-react';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const UploadVideo = () => {
   useDocumentTitle('Upload Cinematic Video');
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const [categories, setCategories] = useState([]);
   

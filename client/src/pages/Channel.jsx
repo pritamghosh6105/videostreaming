@@ -1059,41 +1059,6 @@ const Channel = () => {
           </div>
         )}
 
-        {activeTab === 'playlists' && (
-          <div>
-            {playlists.length === 0 ? (
-              <p className="text-center text-sm text-light-muted dark:text-dark-muted py-10">This channel has no public playlists.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {playlists.map((playlist) => (
-                  <Link
-                    key={playlist._id}
-                    to={`/playlist/${playlist._id}`}
-                    className="flex flex-col gap-2 p-3 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-2xl hover:shadow-md transition-shadow cursor-pointer group"
-                  >
-                    <div className="aspect-video w-full rounded-xl bg-light-hover dark:bg-dark-hover flex items-center justify-center relative overflow-hidden border border-light-border dark:border-dark-border">
-                      <FolderOpen size={44} className="text-light-muted dark:text-dark-muted group-hover:scale-110 transition-transform" />
-                      <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-black/45 backdrop-blur-sm flex flex-col items-center justify-center text-white text-xs font-bold">
-                        <span>{playlist.videos?.length || 0}</span>
-                        <span>VIDEOS</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-0.5 px-1 mt-1">
-                      <h4 className="font-bold text-sm text-light-text dark:text-dark-text truncate leading-snug group-hover:text-youtube-red transition-colors">
-                        {playlist.name}
-                      </h4>
-                      {playlist.description && (
-                        <p className="text-xs text-light-muted dark:text-dark-muted truncate mt-0.5">
-                          {playlist.description}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
         {activeTab === 'about' && (
           <div className="p-6 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-3xl shadow-sm text-sm">
@@ -1137,6 +1102,26 @@ const Channel = () => {
             </div>
 
             <form onSubmit={handleProfileSubmit} className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-bold text-light-muted dark:text-dark-muted mb-1 uppercase tracking-wide">Avatar logo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="w-full text-xs text-brand-muted file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20 file:cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-light-muted dark:text-dark-muted mb-1 uppercase tracking-wide">Banner image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerChange}
+                  className="w-full text-xs text-brand-muted file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20 file:cursor-pointer"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-light-muted dark:text-dark-muted mb-1 uppercase tracking-wide">Channel Display Name</label>
                 <input

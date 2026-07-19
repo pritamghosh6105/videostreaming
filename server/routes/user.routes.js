@@ -10,6 +10,10 @@ import {
   getChannelProfile,
   getSubscribedChannels,
   getAllChannels,
+  verifyEmail,
+  googleLogin,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/user.controller.js';
 import { verifyJWT, optionalVerifyJWT } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
@@ -23,6 +27,10 @@ router.post('/register', upload.fields([
 ]), registerUser);
 
 router.post('/login', loginUser);
+router.post('/google-login', googleLogin);
+router.post('/verify-email', verifyEmail);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 router.get('/channels', getAllChannels);
 router.get('/c/:username', optionalVerifyJWT, getChannelProfile);
 

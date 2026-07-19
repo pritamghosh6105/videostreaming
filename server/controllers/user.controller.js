@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Subscription from '../models/Subscription.js';
 import Video from '../models/Video.js';
 import { uploadOnCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
+import { sendPasswordResetEmail, sendRegistrationVerificationEmail } from '../config/mailer.js';
 
 // Helper to generate JWT Token
 const generateToken = (id) => {
@@ -51,6 +52,21 @@ export const registerUser = async (req, res, next) => {
       bannerPid = bannerUpload?.publicId;
     }
 
+    // Generate verification code if gmail
+    const isGmail = email.trim().toLowerCase().endsWith('@gmail.com');
+    let isVerified = true;
+    let verificationCode = null;
+    let verificationCodeExpiry = null;
+
+    if (isGmail) {
+      isVerified = false;
+      verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      
+      // Dispatch verification code via email securely (without console logging the code)
+      await sendRegistrationVerificationEmail(email.trim(), verificationCode);
+    }
+
     // Create user
     const user = await User.create({
       fullName,
@@ -62,9 +78,21 @@ export const registerUser = async (req, res, next) => {
       avatarPublicId: avatarPid,
       banner: bannerUrl,
       bannerPublicId: bannerPid,
+      isVerified,
+      verificationCode,
+      verificationCodeExpiry,
     });
 
     if (user) {
+      if (isGmail) {
+        return res.status(201).json({
+          success: true,
+          needsVerification: true,
+          message: 'Gmail verification code sent to email. Please verify code.',
+          email: user.email,
+        });
+      }
+
       res.status(201).json({
         success: true,
         data: {
@@ -115,6 +143,11 @@ export const loginUser = async (req, res, next) => {
     if (user.isBanned) {
       res.status(403);
       throw new Error('This user channel is banned');
+    }
+
+    if (user.isVerified === false) {
+      res.status(403);
+      throw new Error('Email is not verified. Please verify your email first.');
     }
 
     const isMatch = await user.matchPassword(password);
@@ -450,6 +483,209 @@ export const getCurrentChannelProfile = async (req, res, next) => {
         isSubscribed: false,
         videosCount,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify Gmail registration OTP
+// @route   POST /api/v1/users/verify-email
+// @access  Public
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      res.status(400);
+      throw new Error('Email and verification code are required');
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      verificationCode: code,
+      verificationCodeExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      res.status(400);
+      throw new Error('Invalid or expired verification code');
+    }
+
+    user.isVerified = true;
+    user.verificationCode = null;
+    user.verificationCodeExpiry = null;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+      data: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        username: user.username,
+        avatar: user.avatar,
+        banner: user.banner,
+        bio: user.bio,
+        role: user.role,
+        token: generateToken(user._id),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Google Sign-in / Sign-up
+// @route   POST /api/v1/users/google-login
+// @access  Public
+export const googleLogin = async (req, res, next) => {
+  try {
+    const { email, fullName, avatar, googleId } = req.body;
+
+    if (!email || !fullName || !googleId) {
+      res.status(400);
+      throw new Error('Google authentication fields are missing');
+    }
+
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (user) {
+      if (user.isBanned) {
+        res.status(403);
+        throw new Error('This user channel is banned');
+      }
+
+      // Link googleId if not linked
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.isVerified = true; // Pre-verified via Google
+        await user.save();
+      }
+    } else {
+      // Create a unique username from email/name
+      let baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      if (baseUsername.length < 3) {
+        baseUsername = 'user' + Math.floor(1000 + Math.random() * 9000);
+      }
+      
+      let username = baseUsername;
+      let userExists = await User.findOne({ username });
+      while (userExists) {
+        username = baseUsername + Math.floor(10 + Math.random() * 90);
+        userExists = await User.findOne({ username });
+      }
+
+      // Create pre-verified user with Google details and dummy high-entropy password
+      const randPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+      user = await User.create({
+        fullName,
+        email: email.toLowerCase(),
+        username,
+        password: randPassword,
+        avatar: avatar || 'https://res.cloudinary.com/demo/image/upload/d_avatar.png/avatar.png',
+        googleId,
+        isVerified: true,
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        username: user.username,
+        avatar: user.avatar,
+        banner: user.banner,
+        bio: user.bio,
+        role: user.role,
+        token: generateToken(user._id),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Request forgot password OTP
+// @route   POST /api/v1/users/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400);
+      throw new Error('Email address is required');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      res.status(404);
+      throw new Error('No account found with this email address');
+    }
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    await user.save();
+
+    // Dispatch verification code securely to registered email without console logging OTP
+    await sendPasswordResetEmail(user.email, resetCode);
+
+    res.json({
+      success: true,
+      message: 'A 6-digit verification code has been sent to your registered Gmail address.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reset password using OTP
+// @route   POST /api/v1/users/reset-password
+// @access  Public
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, code, newPassword, confirmPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      res.status(400);
+      throw new Error('Email, verification code, and new password are required');
+    }
+
+    if (confirmPassword && newPassword !== confirmPassword) {
+      res.status(400);
+      throw new Error('New password and confirm password do not match');
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400);
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      resetPasswordCode: code,
+      resetPasswordCodeExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      res.status(400);
+      throw new Error('Invalid or expired verification code');
+    }
+
+    user.password = newPassword; // Automatically hashed on save
+    user.resetPasswordCode = null;
+    user.resetPasswordCodeExpiry = null;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully. You may now sign in with your new password.',
     });
   } catch (error) {
     next(error);

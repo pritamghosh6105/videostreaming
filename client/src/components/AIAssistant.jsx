@@ -39,17 +39,43 @@ const AIAssistant = () => {
     localStorage.setItem('ai_assistant_config', JSON.stringify(aiConfig));
   }, [aiConfig]);
 
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      sender: 'bot',
-      text: 'Hi there! I am your AI Assistance. 🤖\n\nI can recommend videos, suggest playlist ideas, or summarize the video you are currently watching! Ask me anything.',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem(isAuthenticated && user?._id ? `ai_messages_${user._id}` : 'ai_messages_guest');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((m) => ({ ...m, timestamp: new Date(m.timestamp) }));
+        }
+      } catch (e) {
+        console.error('Failed to load AI chat history:', e);
+      }
+    }
+    return [
+      {
+        id: 'welcome',
+        sender: 'bot',
+        text: 'Hi there! I am your AI Assistance. 🤖\n\nI can recommend videos, suggest playlist ideas, or summarize the video you are currently watching! Ask me anything.',
+        timestamp: new Date(),
+      },
+    ];
+  });
+
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
+  
+  // Rate limit timestamps state
+  const [messageTimestamps, setMessageTimestamps] = useState(() => {
+    const saved = sessionStorage.getItem('ai_msg_timestamps');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Persist messages
+  useEffect(() => {
+    const key = isAuthenticated && user?._id ? `ai_messages_${user._id}` : 'ai_messages_guest';
+    localStorage.setItem(key, JSON.stringify(messages));
+  }, [messages, isAuthenticated, user]);
 
   // Auto-scroll messages list
   const messagesEndRef = useRef(null);
@@ -124,6 +150,32 @@ const AIAssistant = () => {
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputValue).trim();
     if (!text) return;
+
+    // Rate limiting check
+    const now = Date.now();
+    const oneMinuteAgo = now - 60000;
+    const activeTimestamps = messageTimestamps.filter((t) => t > oneMinuteAgo);
+    const limit = isAuthenticated ? 10 : 3;
+
+    if (activeTimestamps.length >= limit) {
+      const rateLimitBotMsg = {
+        id: Date.now().toString(),
+        sender: 'bot',
+        text: `⚠️ Rate limit exceeded. ${
+          isAuthenticated
+            ? 'You can send up to 10 messages per minute.'
+            : 'Guest users can only send 3 messages per minute. Please sign in to increase your limit!'
+        } Please wait a moment before sending more messages.`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, rateLimitBotMsg]);
+      return;
+    }
+
+    // Add current timestamp to rate limiter
+    const newTimestamps = [...activeTimestamps, now];
+    setMessageTimestamps(newTimestamps);
+    sessionStorage.setItem('ai_msg_timestamps', JSON.stringify(newTimestamps));
 
     if (!textToSend) {
       setInputValue('');
@@ -240,21 +292,38 @@ const AIAssistant = () => {
         }
         const linkText = match[1];
         const linkUrl = match[2];
-        parts.push(
-          <a
-            key={match.index}
-            href={linkUrl}
-            className="text-red-500 hover:text-red-600 dark:text-youtube-lightRed hover:underline font-semibold transition-all"
-            onClick={(e) => {
-              if (linkUrl.startsWith('/')) {
+        if (linkUrl.startsWith('action:')) {
+          parts.push(
+            <button
+              key={match.index}
+              onClick={(e) => {
                 e.preventDefault();
-                navigate(linkUrl);
-              }
-            }}
-          >
-            {linkText}
-          </a>
-        );
+                if (linkUrl === 'action:save_to_playlist') {
+                  window.dispatchEvent(new CustomEvent('open-playlist-modal'));
+                }
+              }}
+              className="px-3 py-1.5 mx-1 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-pink hover:opacity-95 text-white text-[10px] font-black uppercase tracking-widest cursor-pointer shadow-md inline-flex items-center gap-1.5 transition-transform hover:scale-[1.03] active:scale-[0.97] border-none"
+            >
+              <span>{linkText}</span>
+            </button>
+          );
+        } else {
+          parts.push(
+            <a
+              key={match.index}
+              href={linkUrl}
+              className="text-red-500 hover:text-red-600 dark:text-youtube-lightRed hover:underline font-semibold transition-all"
+              onClick={(e) => {
+                if (linkUrl.startsWith('/')) {
+                  e.preventDefault();
+                  navigate(linkUrl);
+                }
+              }}
+            >
+              {linkText}
+            </a>
+          );
+        }
         lastIndex = linkRegex.lastIndex;
       }
 
@@ -542,6 +611,28 @@ const AIAssistant = () => {
                   </p>
                 </div>
               </div>
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="flex-grow flex flex-col items-center justify-center p-6 text-center select-none bg-light-bg/40 dark:bg-dark-bg/5">
+              <div className="p-4 rounded-3xl bg-gradient-to-tr from-brand-primary to-brand-pink text-white flex items-center justify-center shadow-lg shadow-brand-primary-glow animate-float mb-4">
+                <Bot size={36} />
+              </div>
+              <h3 className="text-base font-black text-light-text dark:text-dark-text uppercase tracking-widest mb-2">
+                Unlock ViewAI Assistant
+              </h3>
+              <p className="text-xs text-light-muted dark:text-dark-muted font-bold max-w-[280px] mx-auto leading-relaxed mb-6">
+                Sign in to ask questions, summarize videos, get playlist suggestions, and remove guest rate limits!
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/login', { state: { from: location } });
+                }}
+                className="px-8 py-3 bg-gradient-to-tr from-brand-primary to-brand-pink hover:opacity-95 text-white font-black text-xs tracking-widest uppercase rounded-2xl shadow-lg shadow-brand-primary-glow cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Sign In Now
+              </button>
             </div>
           ) : (
             <>

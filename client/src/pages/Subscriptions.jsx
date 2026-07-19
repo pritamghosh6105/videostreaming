@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import VideoCard from '../components/VideoCard';
@@ -17,50 +17,56 @@ const Subscriptions = () => {
     if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const [videos, setVideos] = useState([]);
   const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSubscriptionsFeed = async () => {
-    setLoading(true);
-    try {
-      // 1. Fetch channels user is subscribed to
-      const channelRes = await api.get('/users/subscriptions');
-      const list = channelRes.data.data || [];
-      setChannels(list);
-
-      if (list.length === 0) {
-        setVideos([]);
-        setLoading(false);
-        return;
-      }
-
-      // 2. Fetch recent videos of each creator in parallel
-      const videoPromises = list.map((ch) =>
-        api.get(`/videos?userId=${ch._id}&limit=6`).catch(() => ({ data: { data: [] } }))
-      );
-      
-      const results = await Promise.all(videoPromises);
-      
-      // 3. Merge and sort chronologically (newest first)
-      const merged = results
-        .flatMap((r) => r.data?.data || [])
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      setVideos(merged);
-    } catch (err) {
-      console.error('Error fetching subscriptions feed:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let ignore = false;
     if (!authLoading && isAuthenticated) {
-      fetchSubscriptionsFeed();
+      const loadFeed = async () => {
+        try {
+          const channelRes = await api.get('/users/subscriptions');
+          const list = channelRes.data.data || [];
+          if (ignore) return;
+          setChannels(list);
+
+          if (list.length === 0) {
+            setVideos([]);
+            setLoading(false);
+            return;
+          }
+
+          const videoPromises = list.map((ch) =>
+            api.get(`/videos?userId=${ch._id}&limit=6`).catch(() => ({ data: { data: [] } }))
+          );
+          
+          const results = await Promise.all(videoPromises);
+          
+          if (!ignore) {
+            const merged = results
+              .flatMap((r) => r.data?.data || [])
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setVideos(merged);
+          }
+        } catch (err) {
+          if (!ignore) {
+            console.error('Error fetching subscriptions feed:', err.message);
+          }
+        } finally {
+          if (!ignore) {
+            setLoading(false);
+          }
+        }
+      };
+      loadFeed();
     }
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, authLoading]);
 
   if (authLoading || loading) return <VideoGridSkeleton count={8} />;

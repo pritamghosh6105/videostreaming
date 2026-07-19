@@ -19,7 +19,9 @@ import {
   Compass,
   ArrowRight,
   Monitor,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft,
+  Pause
 } from 'lucide-react';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -54,8 +56,36 @@ const Home = () => {
   const [isMuted, setIsMuted] = useState(true);
 
   // Banner videos playlist selection
+  const heroVideoRef = useRef(null);
   const [bannerVideos, setBannerVideos] = useState([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [isAutoPlayActive, setIsAutoPlayActive] = useState(true);
+
+  // Toggle video play / pause state
+  const togglePlayPause = () => {
+    setIsAutoPlayActive((prev) => {
+      const nextState = !prev;
+      if (heroVideoRef.current) {
+        if (nextState) {
+          heroVideoRef.current.play().catch(() => {});
+        } else {
+          heroVideoRef.current.pause();
+        }
+      }
+      return nextState;
+    });
+  };
+
+  // Ensure video element play/pause status matches isAutoPlayActive state
+  useEffect(() => {
+    if (heroVideoRef.current) {
+      if (isAutoPlayActive) {
+        heroVideoRef.current.play().catch(() => {});
+      } else {
+        heroVideoRef.current.pause();
+      }
+    }
+  }, [isAutoPlayActive, currentBannerIndex]);
 
   // Community Comments
   const [openComments, setOpenComments] = useState({});
@@ -114,6 +144,21 @@ const Home = () => {
       prevIndex === bannerVideos.length - 1 ? 0 : prevIndex + 1
     );
   };
+
+  const handlePrevBanner = () => {
+    if (bannerVideos.length === 0) return;
+    setCurrentBannerIndex((prevIndex) => 
+      prevIndex === 0 ? bannerVideos.length - 1 : prevIndex - 1
+    );
+  };
+
+  useEffect(() => {
+    if (!isAutoPlayActive || bannerVideos.length <= 1) return;
+    const interval = setInterval(() => {
+      handleNextBanner();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isAutoPlayActive, bannerVideos, currentBannerIndex]);
 
   // Fetch Videos
   const fetchVideos = async (reset = false) => {
@@ -349,9 +394,10 @@ const Home = () => {
           {/* Muted Autoplay Video Preview background */}
           <div className="absolute inset-0 w-full h-full">
             <video
+              ref={heroVideoRef}
               key={featuredVideo._id}
               src={getMediaUrl(featuredVideo.videoFile)}
-              autoPlay
+              autoPlay={isAutoPlayActive}
               muted={isMuted}
               loop
               playsInline
@@ -364,6 +410,17 @@ const Home = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-brand-bg/40 dark:from-brand-bg/85 via-transparent to-transparent z-10 hidden md:block" />
           </div>
 
+          {/* Left Arrow Button */}
+          {bannerVideos.length > 1 && (
+            <button
+              onClick={handlePrevBanner}
+              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 text-white/40 hover:text-white/90 transition-all duration-300 hover:scale-125 active:scale-90 cursor-pointer"
+              title="Previous Video"
+            >
+              <ChevronLeft size={44} className="w-10 h-10 md:w-12 md:h-12" />
+            </button>
+          )}
+
           {/* Right Arrow Button */}
           {bannerVideos.length > 1 && (
             <button
@@ -373,6 +430,24 @@ const Home = () => {
             >
               <ChevronRight size={44} className="w-10 h-10 md:w-12 md:h-12" />
             </button>
+          )}
+
+          {/* Slide Indicator Dots */}
+          {bannerVideos.length > 1 && (
+            <div className="absolute bottom-6 right-8 md:right-16 z-30 flex items-center gap-2 select-none">
+              {bannerVideos.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentBannerIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    idx === currentBannerIndex
+                      ? 'bg-brand-primary w-5'
+                      : 'bg-white/40 hover:bg-white/80'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
           )}
 
           {/* Floating Details Overlay */}
@@ -403,6 +478,14 @@ const Home = () => {
                 <span>Watch Now</span>
               </Link>
               
+              <button
+                onClick={togglePlayPause}
+                className="p-3 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-xl border border-white/10 text-white backdrop-blur-md smooth-transition cursor-pointer"
+                title={isAutoPlayActive ? 'Pause Video' : 'Play Video'}
+              >
+                {isAutoPlayActive ? <Pause size={16} /> : <Play size={16} fill="white" />}
+              </button>
+
               <button
                 onClick={() => setIsMuted(!isMuted)}
                 className="p-3 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-xl border border-white/10 text-white backdrop-blur-md smooth-transition cursor-pointer"
@@ -741,13 +824,32 @@ const Home = () => {
             <div className="text-center py-20 bg-white/[0.02] rounded-3xl border border-white/5">
               <p className="text-sm font-bold text-brand-muted">No media entries found in this category.</p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {videos.map((video) => (
-                <VideoCard key={video._id} video={video} />
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            const filtered = videos.filter((video) => {
+              if (activeCategory === 'all') {
+                if (featuredVideo && video._id === featuredVideo._id) return false;
+                if (trendingVideos.some((tv) => tv._id === video._id)) return false;
+              }
+              return true;
+            });
+            const gridVideos = (activeCategory === 'all' && filtered.length === 0) ? videos : filtered;
+
+            if (gridVideos.length === 0) {
+              return (
+                <div className="text-center py-20 bg-white/[0.02] rounded-3xl border border-white/5">
+                  <p className="text-sm font-bold text-brand-muted">No media entries found in this category.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {gridVideos.map((video) => (
+                  <VideoCard key={video._id} video={video} />
+                ))}
+              </div>
+            );
+          })()}
 
           {/* Load More Trigger */}
           {hasMore && !loading && (
@@ -764,47 +866,6 @@ const Home = () => {
         </section>
 
       </div>
-
-      {/* 6. Cinematic Premium Footer */}
-      <footer className="mt-20 border-t border-brand-border bg-brand-card backdrop-blur-md py-12 px-4 md:px-12">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 select-none">
-          <div className="flex flex-col gap-3">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-gradient-to-tr from-brand-primary to-brand-pink text-white flex items-center justify-center">
-                <Play size={12} fill="white" className="ml-0.5" />
-              </div>
-              <span className="font-black text-base tracking-wider uppercase text-brand-text">
-                View<span className="bg-gradient-to-r from-brand-primary to-brand-pink bg-clip-text text-transparent">Flow</span>
-              </span>
-            </Link>
-            <p className="text-[11px] text-brand-muted leading-relaxed font-semibold">
-              The next-generation video streaming experience. Engineered for beautiful visuals, seamless latency, and creator expression.
-            </p>
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest border-l-2 border-brand-primary pl-2">Platform</h4>
-            <Link to="/" className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Home Hub</Link>
-            <Link to="/feed/trending" className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Trending Feeds</Link>
-            <Link to="/channels" className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Browse Partner channels</Link>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest border-l-2 border-brand-pink pl-2">Legal</h4>
-            <Link to="#" onClick={(e) => { e.preventDefault(); showToast('Demo: Terms & Conditions coming soon!', 'info'); }} className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Terms & Conditions</Link>
-            <Link to="#" onClick={(e) => { e.preventDefault(); showToast('Demo: Privacy Charter coming soon!', 'info'); }} className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Privacy Charter</Link>
-            <Link to="#" onClick={(e) => { e.preventDefault(); showToast('Demo: Cookie Settings coming soon!', 'info'); }} className="text-[11px] text-brand-muted hover:text-brand-text transition-colors font-semibold">Cookie Settings</Link>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest border-l-2 border-brand-blue pl-2">Developer info</h4>
-            <p className="text-[11px] text-brand-muted leading-relaxed font-semibold">
-              Powered by Google Gemini 2.5 Flash, React.js, Express, and MongoDB. 
-            </p>
-            <span className="text-[10px] text-brand-primary font-bold">© 2026 ViewFlow. All rights reserved.</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

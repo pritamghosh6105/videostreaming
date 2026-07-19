@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import VideoCard from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
@@ -11,20 +11,28 @@ const Trending = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTrendingVideos = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/videos/feed/trending');
-      setVideos(res.data.data || []);
-    } catch (err) {
-      console.error('Error fetching trending videos:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTrendingVideos();
+    let ignore = false;
+    const loadTrending = async () => {
+      try {
+        const res = await api.get('/videos/feed/trending');
+        if (!ignore) {
+          setVideos(res.data.data || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error('Error fetching trending videos:', err.message);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+    loadTrending();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   if (loading) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import VideoCard from '../components/VideoCard';
@@ -17,27 +17,35 @@ const WatchHistory = () => {
     if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchWatchHistory = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/videos/history/watch');
-      setVideos(res.data.data || []);
-    } catch (err) {
-      console.error('Error fetching watch history:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let ignore = false;
     if (!authLoading && isAuthenticated) {
-      fetchWatchHistory();
+      const loadHistory = async () => {
+        try {
+          const res = await api.get('/videos/history/watch');
+          if (!ignore) {
+            setVideos(res.data.data || []);
+          }
+        } catch (err) {
+          if (!ignore) {
+            console.error('Error fetching watch history:', err.message);
+          }
+        } finally {
+          if (!ignore) {
+            setLoading(false);
+          }
+        }
+      };
+      loadHistory();
     }
+    return () => {
+      ignore = true;
+    };
   }, [isAuthenticated, authLoading]);
 
   const handleClearHistory = async () => {

@@ -14,6 +14,8 @@ import ColdStartLoader from './components/ColdStartLoader';
 // Layout components
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import AIAssistant from './components/AIAssistant';
 import Home from './pages/Home';
 import Watch from './pages/Watch';
@@ -24,6 +26,9 @@ import AdminPanel from './pages/AdminPanel';
 import UploadVideo from './pages/Upload';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyOtp from './pages/VerifyOtp';
+import ForgotPassword from './pages/ForgotPassword';
+import Notifications from './pages/Notifications';
 import Subscriptions from './pages/Subscriptions';
 import WatchHistory from './pages/WatchHistory';
 import LikedVideos from './pages/LikedVideos';
@@ -61,25 +66,80 @@ const AppContent = () => {
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         
         {/* Cinematic Main Viewport */}
-        <main className={`flex-grow w-full smooth-transition ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/watch/:id" element={<Watch />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/c/:username" element={<Channel />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/upload" element={<UploadVideo />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/history/watch" element={<WatchHistory />} />
-            <Route path="/liked-videos" element={<LikedVideos />} />
-            <Route path="/playlist/:id" element={<PlaylistDetail />} />
-            <Route path="/channels" element={<Channels />} />
-            <Route path="/feed/trending" element={<Trending />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+        <main className={`flex-grow w-full smooth-transition flex flex-col ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
+          <div className="flex-grow flex flex-col">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/watch/:id" element={<Watch />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/c/:username" element={<Channel />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/upload"
+                element={
+                  <ProtectedRoute>
+                    <UploadVideo />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyOtp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/subscriptions"
+                element={
+                  <ProtectedRoute>
+                    <Subscriptions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/history/watch"
+                element={
+                  <ProtectedRoute>
+                    <WatchHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/liked-videos"
+                element={
+                  <ProtectedRoute>
+                    <LikedVideos />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/playlist/:id" element={<PlaylistDetail />} />
+              <Route path="/channels" element={<Channels />} />
+              <Route path="/feed/trending" element={<Trending />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <Footer />
         </main>
       </div>
       

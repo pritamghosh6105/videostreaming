@@ -7,6 +7,12 @@ import { getMediaUrl } from './VideoCard';
 
 const CommentSection = ({ videoId }) => {
   const { user, isAdmin } = useAuth();
+
+  const getOwnerId = (owner) => {
+    if (!owner) return '';
+    return typeof owner === 'object' ? owner._id : owner;
+  };
+
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -259,7 +265,7 @@ const CommentSection = ({ videoId }) => {
       ) : (
         <div className="flex flex-col gap-5">
           {comments.map((comment) => {
-            const isCommentOwner = user && comment.owner?._id === user._id;
+            const isCommentOwner = user && getOwnerId(comment.owner) === user._id;
             const canModerate = isCommentOwner || isAdmin;
             
             return (
@@ -318,7 +324,7 @@ const CommentSection = ({ videoId }) => {
                           setReplyCommentId(comment._id);
                           setReplyContent('');
                         }}
-                        className="flex items-center gap-1 hover:text-light-text dark:hover:text-dark-text transition-colors"
+                        className="flex items-center gap-1 hover:text-light-text dark:hover:text-dark-text transition-colors cursor-pointer"
                       >
                         <MessageSquare size={13} /> Reply
                       </button>
@@ -331,13 +337,13 @@ const CommentSection = ({ videoId }) => {
                             setEditingCommentId(comment._id);
                             setEditContent(comment.content);
                           }}
-                          className="flex items-center gap-1 hover:text-light-text dark:hover:text-dark-text transition-colors"
+                          className="flex items-center gap-1 hover:text-light-text dark:hover:text-dark-text transition-colors cursor-pointer"
                         >
                           <Edit2 size={13} /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteComment(comment._id)}
-                          className="flex items-center gap-1 hover:text-youtube-red transition-colors text-youtube-lightRed"
+                          className="flex items-center gap-1 hover:text-youtube-red transition-colors text-youtube-lightRed cursor-pointer"
                         >
                           <Trash2 size={13} /> Delete
                         </button>
@@ -347,7 +353,7 @@ const CommentSection = ({ videoId }) => {
                     {user && !isCommentOwner && (
                       <button
                         onClick={() => handleReportComment(comment._id)}
-                        className="flex items-center gap-1 hover:text-amber-500 transition-colors text-amber-600/80"
+                        className="flex items-center gap-1 hover:text-amber-500 transition-colors text-amber-600/80 cursor-pointer"
                       >
                         <ShieldAlert size={13} /> Report
                       </button>
@@ -367,13 +373,13 @@ const CommentSection = ({ videoId }) => {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => setReplyCommentId(null)}
-                          className="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-light-hover dark:hover:bg-dark-hover"
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-light-hover dark:hover:bg-dark-hover cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => handleAddReply(comment._id)}
-                          className="px-3 py-1.5 bg-youtube-red hover:bg-youtube-darkRed text-white text-xs font-semibold rounded-lg"
+                          className="px-3 py-1.5 bg-youtube-red hover:bg-youtube-darkRed text-white text-xs font-semibold rounded-lg cursor-pointer"
                         >
                           Reply
                         </button>
@@ -385,7 +391,7 @@ const CommentSection = ({ videoId }) => {
                   {comment.repliesCount > 0 && (
                     <button
                       onClick={() => handleToggleReplies(comment._id)}
-                      className="flex items-center gap-1.5 text-xs font-bold text-youtube-red hover:underline mt-2 text-left"
+                      className="flex items-center gap-1.5 text-xs font-bold text-youtube-red hover:underline mt-2 text-left cursor-pointer"
                     >
                       <CornerDownRight size={13} />
                       {showRepliesFor[comment._id]
@@ -398,7 +404,7 @@ const CommentSection = ({ videoId }) => {
                   {showRepliesFor[comment._id] && loadedReplies[comment._id] && (
                     <div className="flex flex-col gap-4 mt-3 pl-4 border-l-2 border-light-border dark:border-dark-border">
                       {loadedReplies[comment._id].map((reply) => {
-                        const isReplyOwner = user && reply.owner?._id === user._id;
+                        const isReplyOwner = user && getOwnerId(reply.owner) === user._id;
                         const canModerateReply = isReplyOwner || isAdmin;
 
                         return (
@@ -455,13 +461,13 @@ const CommentSection = ({ videoId }) => {
                                         setEditingCommentId(reply._id);
                                         setEditContent(reply.content);
                                       }}
-                                      className="hover:text-light-text dark:hover:text-dark-text transition-colors"
+                                      className="hover:text-light-text dark:hover:text-dark-text transition-colors cursor-pointer"
                                     >
                                       Edit
                                     </button>
                                     <button
                                       onClick={() => handleDeleteComment(reply._id, comment._id)}
-                                      className="hover:text-youtube-red transition-colors text-youtube-lightRed"
+                                      className="hover:text-youtube-red transition-colors text-youtube-lightRed cursor-pointer"
                                     >
                                       Delete
                                     </button>
@@ -470,7 +476,7 @@ const CommentSection = ({ videoId }) => {
                                 {user && !isReplyOwner && (
                                   <button
                                     onClick={() => handleReportComment(reply._id)}
-                                    className="hover:text-amber-500 transition-colors text-amber-600/80"
+                                    className="hover:text-amber-500 transition-colors text-amber-600/80 cursor-pointer"
                                   >
                                     Report
                                   </button>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import VideoPlayer from '../components/VideoPlayer';
@@ -15,8 +15,6 @@ import {
   ShieldAlert, 
   ChevronDown, 
   ChevronUp, 
-  Flame, 
-  Sparkles,
   CheckCircle,
   Eye,
   Calendar
@@ -28,6 +26,7 @@ import NotFound from './NotFound';
 const Watch = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
 
@@ -49,38 +48,60 @@ const Watch = () => {
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // Fetch video details
-  const fetchVideoDetails = async () => {
-    if (!video) {
-      setLoading(true);
-    }
-    try {
-      // Fetch details and related recommendations in parallel
-      const [res, relatedRes] = await Promise.all([
-        api.get(`/videos/${id}`),
-        api.get(`/videos/${id}/related`)
-      ]);
+  useEffect(() => {
+    let ignore = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      const data = res.data.data;
-      setVideo(data);
-      setLikes(data.likesCount || 0);
-      setDislikes(data.dislikesCount || 0);
-      setReaction(data.userReaction);
-      setIsSubscribed(data.isSubscribed);
-      setSubscribers(data.owner?.subscribersCount || 0);
-      setRelatedVideos(relatedRes.data.data || []);
-    } catch (err) {
-      console.error('Error fetching watch video details:', err.message);
-      setHasError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadVideoData = async () => {
+      try {
+        const [res, relatedRes] = await Promise.all([
+          api.get(`/videos/${id}`),
+          api.get(`/videos/${id}/related`)
+        ]);
+
+        if (!ignore) {
+          const data = res.data.data;
+          setVideo(data);
+          setLikes(data.likesCount || 0);
+          setDislikes(data.dislikesCount || 0);
+          setReaction(data.userReaction);
+          setIsSubscribed(data.isSubscribed);
+          setSubscribers(data.owner?.subscribersCount || 0);
+          setRelatedVideos(relatedRes.data.data || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error('Error fetching watch video details:', err.message);
+          setHasError(true);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadVideoData();
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    fetchVideoDetails();
-  }, [id]);
+    const handleOpenPlaylistModal = () => {
+      if (isAuthenticated) {
+        setIsPlaylistModalOpen(true);
+      } else {
+        showToast('Please sign in to save videos to your playlists.', 'info');
+        navigate('/login', { state: { from: location } });
+      }
+    };
+
+    window.addEventListener('open-playlist-modal', handleOpenPlaylistModal);
+    return () => {
+      window.removeEventListener('open-playlist-modal', handleOpenPlaylistModal);
+    };
+  }, [isAuthenticated, location, navigate, showToast]);
 
   // Handle Like/Dislike click (Optimistic UI update)
   const handleReaction = async (type) => {
@@ -95,7 +116,7 @@ const Watch = () => {
     const prevLikes = likes;
     const prevDislikes = dislikes;
 
-    let targetReaction = null;
+    let targetReaction;
     let nextLikes = likes;
     let nextDislikes = dislikes;
 
@@ -183,7 +204,7 @@ const Watch = () => {
     try {
       document.execCommand('copy');
       showToast('Video link copied to clipboard!', 'success');
-    } catch (err) {
+    } catch {
       showToast('Failed to copy link.', 'error');
     }
     document.body.removeChild(textArea);
@@ -247,14 +268,12 @@ const Watch = () => {
       <div className="flex-grow lg:w-[68%] flex flex-col gap-6">
         
         {/* Custom video player */}
-        <div className="rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-          <VideoPlayer
-            src={getMediaUrl(video.videoFile)}
-            thumbnail={getMediaUrl(video.thumbnail)}
-            videoId={video._id}
-            onEnded={playNextVideo}
-          />
-        </div>
+        <VideoPlayer
+          src={getMediaUrl(video.videoFile)}
+          thumbnail={getMediaUrl(video.thumbnail)}
+          videoId={video._id}
+          onEnded={playNextVideo}
+        />
 
         {/* Video Title */}
         <h1 className="text-xl md:text-2xl font-black text-brand-text leading-snug tracking-tight">
@@ -299,8 +318,8 @@ const Watch = () => {
           </div>
 
           {/* Social Action Control Pills */}
-          <div className="flex items-center flex-wrap gap-2 text-xs font-bold text-brand-text">
-            {/* Likes/Dislikes reaction capsule */}
+          <div className="flex items-center flex-wrap gap-3.5 text-xs font-bold text-brand-text">
+            {/* Group 1: Likes & Dislikes */}
             <div className="flex items-center bg-black/5 dark:bg-white/5 border border-brand-border rounded-xl overflow-hidden shadow-md">
               <button
                 type="button"
@@ -324,28 +343,42 @@ const Watch = () => {
               </button>
             </div>
 
-            {/* Save to Playlist */}
-            {isAuthenticated && (
+            {/* Visual separator spacer */}
+            <div className="h-4.5 w-px bg-brand-border hidden md:block" />
+
+            {/* Group 2: Utilities (Save & Share) */}
+            <div className="flex items-center gap-2">
+              {/* Save to Playlist */}
               <button
                 type="button"
-                onClick={() => setIsPlaylistModalOpen(true)}
+                onClick={() => {
+                  if (isAuthenticated) {
+                    setIsPlaylistModalOpen(true);
+                  } else {
+                    showToast('Please sign in to save videos to your playlists.', 'info');
+                    navigate('/login', { state: { from: location } });
+                  }
+                }}
                 className="flex items-center gap-1.5 px-4.5 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-brand-border rounded-xl transition-colors cursor-pointer text-brand-muted hover:text-brand-text"
               >
                 <FolderHeart size={14} />
                 <span>Save</span>
               </button>
-            )}
 
-            {/* Share action */}
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-1.5 px-4.5 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-brand-border rounded-xl transition-colors cursor-pointer text-brand-muted hover:text-brand-text"
-            >
-              <Share2 size={14} />
-              <span>Share</span>
-            </button>
+              {/* Share action */}
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 px-4.5 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-brand-border rounded-xl transition-colors cursor-pointer text-brand-muted hover:text-brand-text"
+              >
+                <Share2 size={14} />
+                <span>Share</span>
+              </button>
+            </div>
 
-            {/* Flag Report Action */}
+            {/* Visual separator spacer */}
+            <div className="h-4.5 w-px bg-brand-border hidden md:block" />
+
+            {/* Group 3: Reporting */}
             {isAuthenticated && (
               <button
                 onClick={handleReportVideo}

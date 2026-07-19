@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import VideoCard, { getMediaUrl, formatViews } from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
-import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Filter, SlidersHorizontal } from 'lucide-react';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
@@ -20,43 +20,60 @@ const Search = () => {
   // Filters & Sorting states
   const [activeCategory, setActiveCategory] = useState('');
   const [sortBy, setSortBy] = useState('createdAt'); // createdAt, views, likes
-  const [sortType, setSortType] = useState('desc');
+  const [sortType] = useState('desc');
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
   // Fetch categories
   useEffect(() => {
+    let ignore = false;
     const fetchCategories = async () => {
       try {
         const res = await api.get('/categories');
-        setCategories(res.data.data || []);
+        if (!ignore) {
+          setCategories(res.data.data || []);
+        }
       } catch (err) {
-        console.error('Error fetching categories:', err.message);
+        if (!ignore) {
+          console.error('Error fetching categories:', err.message);
+        }
       }
     };
     fetchCategories();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // Fetch results
-  const fetchResults = async () => {
-    setLoading(true);
-    try {
-      let searchUrl = `/search?query=${encodeURIComponent(query)}&sortBy=${sortBy}&sortType=${sortType}`;
-      if (activeCategory) {
-        searchUrl += `&category=${activeCategory}`;
-      }
-      const res = await api.get(searchUrl);
-      const data = res.data.data || {};
-      setVideos(data.videos || []);
-      setChannels(data.channels || []);
-    } catch (err) {
-      console.error('Search results fetch error:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let ignore = false;
+    const fetchResults = async () => {
+      try {
+        let searchUrl = `/search?query=${encodeURIComponent(query)}&sortBy=${sortBy}&sortType=${sortType}`;
+        if (activeCategory) {
+          searchUrl += `&category=${activeCategory}`;
+        }
+        const res = await api.get(searchUrl);
+        if (!ignore) {
+          const data = res.data.data || {};
+          setVideos(data.videos || []);
+          setChannels(data.channels || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error('Search results fetch error:', err.message);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchResults();
+    return () => {
+      ignore = true;
+    };
   }, [query, sortBy, sortType, activeCategory]);
 
   return (
@@ -75,7 +92,11 @@ const Search = () => {
         {/* Filter Drawer Toggle */}
         <button
           onClick={() => setShowFilterDrawer(!showFilterDrawer)}
-          className="flex items-center gap-2 px-4 py-2 bg-light-hover dark:bg-dark-hover text-light-text dark:text-dark-text text-xs font-bold rounded-xl border border-light-border dark:border-dark-border hover:bg-light-border dark:hover:bg-dark-border transition-colors shadow-sm select-none"
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl border transition-all duration-300 shadow-sm select-none cursor-pointer ${
+            showFilterDrawer
+              ? 'bg-brand-primary border-brand-primary text-white shadow-md shadow-brand-primary-glow scale-[1.02]'
+              : 'bg-light-hover dark:bg-dark-hover border-light-border dark:border-dark-border text-light-text dark:text-dark-text hover:bg-light-border dark:hover:bg-dark-border'
+          }`}
         >
           <SlidersHorizontal size={14} />
           <span>Filters</span>
@@ -99,7 +120,7 @@ const Search = () => {
                 <button
                   key={opt.value}
                   onClick={() => setSortBy(opt.value)}
-                  className={`text-left text-xs py-1.5 px-3 rounded-lg font-semibold transition-colors ${
+                  className={`text-left text-xs py-1.5 px-3 rounded-lg font-semibold transition-colors cursor-pointer ${
                     sortBy === opt.value
                       ? 'bg-youtube-red text-white'
                       : 'hover:bg-light-border dark:hover:bg-dark-border text-light-text dark:text-dark-text'
@@ -119,7 +140,7 @@ const Search = () => {
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setActiveCategory('')}
-                className={`text-xs py-1.5 px-3 rounded-lg font-semibold border transition-colors ${
+                className={`text-xs py-1.5 px-3 rounded-lg font-semibold border transition-colors cursor-pointer ${
                   activeCategory === ''
                     ? 'bg-youtube-red border-youtube-red text-white'
                     : 'bg-light-bg dark:bg-dark-bg border-light-border dark:border-dark-border hover:bg-light-border dark:hover:bg-dark-border text-light-text dark:text-dark-text'
@@ -131,7 +152,7 @@ const Search = () => {
                 <button
                   key={cat._id}
                   onClick={() => setActiveCategory(cat._id)}
-                  className={`text-xs py-1.5 px-3 rounded-lg font-semibold border transition-colors ${
+                  className={`text-xs py-1.5 px-3 rounded-lg font-semibold border transition-colors cursor-pointer ${
                     activeCategory === cat._id
                       ? 'bg-youtube-red border-youtube-red text-white'
                       : 'bg-light-bg dark:bg-dark-bg border-light-border dark:border-dark-border hover:bg-light-border dark:hover:bg-dark-border text-light-text dark:text-dark-text'

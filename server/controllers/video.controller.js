@@ -134,13 +134,20 @@ export const getAllVideos = async (req, res, next) => {
 
     // Category filter
     if (category) {
-      // Find category by slug or id
+      // Find category by slug, name or id
       let catId = category;
       if (!mongoose.Types.ObjectId.isValid(category)) {
-        const cat = await Category.findOne({ slug: category });
+        const cat = await Category.findOne({
+          $or: [
+            { slug: category.toLowerCase() },
+            { name: new RegExp(`^${category}$`, 'i') },
+          ],
+        });
         if (cat) catId = cat._id;
       }
-      matchRules.category = new mongoose.Types.ObjectId(catId);
+      if (mongoose.Types.ObjectId.isValid(catId)) {
+        matchRules.category = new mongoose.Types.ObjectId(catId);
+      }
     }
 
     // Search query

@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Register = () => {
-  useDocumentTitle('Create Channel');
+  useDocumentTitle('Register Channel');
   const navigate = useNavigate();
   const { register, logout, isAuthenticated } = useAuth();
   const { showToast } = useToast();
@@ -77,8 +77,13 @@ const Register = () => {
 
     const res = await register(formData);
     if (res.success) {
-      showToast('Registration successful! Channel launched.', 'success');
-      navigate('/');
+      if (res.needsVerification) {
+        showToast('Verification code sent to your Gmail address. Please check your inbox.', 'success');
+        navigate('/verify-email', { state: { email: res.email } });
+      } else {
+        showToast('Registration successful! Channel launched.', 'success');
+        navigate('/');
+      }
     } else {
       setErrorMsg(res.message);
       showToast(res.message || 'Registration failed.', 'error');
@@ -101,7 +106,7 @@ const Register = () => {
             <Play size={24} fill="white" className="ml-0.5" />
           </div>
           <h2 className="text-xl md:text-2xl font-black text-brand-text tracking-wider uppercase">
-            Create Channel
+            Register Channel
           </h2>
           <p className="text-xs text-brand-muted font-semibold mt-1">
             Launch your creator hub and share movies on ViewFlow

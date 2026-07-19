@@ -424,9 +424,16 @@ const Navbar = ({ toggleSidebar }) => {
                         No new updates.
                       </p>
                     ) : (
-                      notifications.map((notif) => renderNotifItem(notif))
+                      notifications.slice(0, 5).map((notif) => renderNotifItem(notif))
                     )}
                   </div>
+                  <Link
+                    to="/notifications"
+                    onClick={() => setShowNotifMenu(false)}
+                    className="text-center py-3 text-xs font-black text-brand-primary hover:text-brand-pink transition-colors border-t border-brand-border bg-brand-card/5 hover:bg-brand-card/15 block uppercase tracking-wider cursor-pointer"
+                  >
+                    See All Notifications
+                  </Link>
                 </div>
               )}
             </div>

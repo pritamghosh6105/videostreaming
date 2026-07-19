@@ -23,9 +23,26 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('token');
     };
 
+    // Listen to storage changes to sync logout/login across multiple tabs (B71)
+    const handleStorageChange = (e) => {
+      if (e.key === 'token') {
+        if (!e.newValue) {
+          setUser(null);
+        } else {
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            setUser(JSON.parse(userStr));
+          }
+        }
+      }
+    };
+
     window.addEventListener('auth-logout', handleGlobalLogout);
+    window.addEventListener('storage', handleStorageChange);
+    
     return () => {
       window.removeEventListener('auth-logout', handleGlobalLogout);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -60,6 +77,10 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
+      if (res.data.needsVerification) {
+        return { success: true, needsVerification: true, email: res.data.email };
+      }
+
       const { token, ...userData } = res.data.data;
 
       localStorage.setItem('token', token);
@@ -70,6 +91,70 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed.';
       return { success: false, message: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify OTP handler
+  const verifyOtp = async (email, code) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/users/verify-email', { email, code });
+      const { token, ...userData } = res.data.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Verification failed.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google Login handler
+  const googleLogin = async (googleUser) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/users/google-login', googleUser);
+      const { token, ...userData } = res.data.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Google Sign-in failed.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot password handler
+  const forgotPassword = async (email) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/users/forgot-password', { email });
+      return { success: true, message: res.data.message };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Request failed.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset password handler
+  const resetPassword = async (email, code, newPassword) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/users/reset-password', { email, code, newPassword });
+      return { success: true, message: res.data.message };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Password reset failed.' };
     } finally {
       setLoading(false);
     }
@@ -156,6 +241,10 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         updateAvatar,
         updateBanner,
+        verifyOtp,
+        googleLogin,
+        forgotPassword,
+        resetPassword,
       }}
     >
       {children}
