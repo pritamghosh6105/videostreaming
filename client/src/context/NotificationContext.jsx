@@ -18,7 +18,12 @@ export const NotificationProvider = ({ children }) => {
       setNotifications(list);
       setUnreadCount(list.filter((n) => !n.isRead).length);
     } catch (err) {
-      console.error('Error fetching notifications:', err.message);
+      if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error') || !err.response) {
+        // Quietly warn for background polling network connection issues (e.g. Render server cold-start)
+        console.warn('Background notification poll deferred: Server connection warming up or re-establishing.');
+      } else {
+        console.error('Error fetching notifications:', err.message);
+      }
     }
   };
 
