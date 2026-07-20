@@ -41,6 +41,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     fetchSidebarData();
   }, [isAuthenticated, user]);
 
+  // Auto-close mobile drawer on route change
+  useEffect(() => {
+    if (window.innerWidth < 1024 && isOpen) {
+      toggleSidebar();
+    }
+  }, [location.pathname]);
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 1024 && isOpen) {
+      toggleSidebar();
+    }
+  };
+
   const mainLinks = [
     { name: 'Home', icon: Home, path: '/' },
     { name: 'Channels', icon: Users, path: '/channels' },
@@ -77,6 +90,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <Link
               key={link.name}
               to={link.path}
+              onClick={handleNavClick}
               className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 relative group overflow-hidden ${
                 active 
                   ? 'bg-gradient-to-r from-brand-primary/20 to-brand-pink/10 text-brand-text border-l-4 border-brand-primary' 
@@ -104,6 +118,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <Link
                 key={link.name}
                 to={link.path}
+                onClick={handleNavClick}
                 className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 relative group overflow-hidden ${
                   active 
                     ? 'bg-gradient-to-r from-brand-primary/20 to-brand-pink/10 text-brand-text border-l-4 border-brand-primary' 
@@ -130,6 +145,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <Link
                 key={playlist._id}
                 to={`/playlist/${playlist._id}`}
+                onClick={handleNavClick}
                 className={`flex items-center gap-4 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group truncate ${
                   active 
                     ? 'bg-gradient-to-r from-brand-primary/20 to-brand-pink/10 text-brand-text border-l-4 border-brand-primary' 
@@ -154,6 +170,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <Link
               key={channel._id}
               to={`/c/${channel.username}`}
+              onClick={handleNavClick}
               className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-brand-primary/10 group"
             >
               <img
@@ -172,6 +189,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <div className="flex flex-col gap-1 border-t border-brand-border pt-4 mt-auto">
           <Link
             to="/dashboard"
+            onClick={handleNavClick}
             className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group ${
               isActive('/dashboard') ? 'bg-gradient-to-r from-brand-primary/20 to-brand-pink/10 text-brand-text border-l-4 border-brand-primary' : 'text-brand-muted hover:text-brand-text hover:bg-brand-primary/10'
             }`}
@@ -182,6 +200,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           {isAdmin && (
             <Link
               to="/admin"
+              onClick={handleNavClick}
               className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group ${
                 isActive('/admin') ? 'bg-gradient-to-r from-brand-primary/20 to-brand-pink/10 text-brand-text border-l-4 border-brand-primary' : 'text-brand-muted hover:text-brand-text hover:bg-brand-primary/10'
               }`}
