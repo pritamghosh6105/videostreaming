@@ -481,8 +481,9 @@ const Channel = () => {
           className="w-full h-full object-cover"
         />
         {isOwner && (
-          <label className="absolute bottom-3 right-3 p-2 bg-black/60 hover:bg-black/85 rounded-xl text-white text-xs font-extrabold cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-sm border border-white/10 opacity-0 group-hover:opacity-100 shadow-md">
-            <Camera size={14} /> Change Banner
+          <label className="absolute bottom-3 right-3 px-3 py-2 bg-black/65 hover:bg-black/85 text-white text-xs font-extrabold cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-md border border-white/20 rounded-xl shadow-lg group-hover:scale-105 active:scale-95 z-10" title="Change Channel Banner">
+            <Camera size={16} className="text-white shrink-0" />
+            <span className="hidden sm:inline">Change Banner</span>
             <input
               type="file"
               accept="image/*"
@@ -501,18 +502,29 @@ const Channel = () => {
             <img
               src={getMediaUrl(channel.avatar)}
               alt={channel.fullName}
-              className="h-20 w-20 md:h-24 md:w-24 rounded-full object-cover shadow border border-light-border dark:border-dark-border"
+              className="h-20 w-20 md:h-24 md:w-24 rounded-full object-cover shadow-xl border-2 border-brand-border"
             />
             {isOwner && (
-              <label className="absolute inset-0 bg-black/45 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity border border-white/10 shadow-inner">
-                <Camera size={20} className="text-white" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
-              </label>
+              <>
+                <label className="absolute inset-0 bg-black/45 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity border border-white/20 shadow-inner z-10" title="Change Profile Photo">
+                  <Camera size={22} className="text-white drop-shadow" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                </label>
+                <label className="absolute bottom-0 right-0 p-2 bg-brand-primary/90 hover:bg-brand-primary text-white rounded-full cursor-pointer shadow-lg border-2 border-brand-bg hover:scale-110 active:scale-95 transition-transform flex items-center justify-center z-10" title="Change Profile Photo">
+                  <Camera size={14} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                </label>
+              </>
             )}
           </div>
 
