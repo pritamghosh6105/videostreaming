@@ -10,6 +10,7 @@ import {
   Settings,
   SkipForward,
   HelpCircle,
+  AlertTriangle,
   X
 } from 'lucide-react';
 
@@ -19,6 +20,7 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
   const controlsTimeoutRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasMediaError, setHasMediaError] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -206,18 +208,40 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
   // Reset states and trigger autoplay when source resets
   useEffect(() => {
     setIsPlaying(false);
+    setHasMediaError(false);
     setCurrentTime(0);
     setShowControls(true);
 
     if (videoRef.current && src) {
+      let isMounted = true;
       const timer = setTimeout(() => {
-        videoRef.current.play()
-          .then(() => setIsPlaying(true))
-          .catch((err) => console.log('Autoplay transition blocked:', err));
+        if (!isMounted || !videoRef.current) return;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              if (isMounted) setIsPlaying(true);
+            })
+            .catch((err) => {
+              if (err.name !== 'AbortError') {
+                console.log('Autoplay transition blocked:', err.message);
+              }
+            });
+        }
       }, 150);
-      return () => clearTimeout(timer);
+      return () => {
+        isMounted = false;
+        clearTimeout(timer);
+      };
     }
   }, [src]);
+
+  // Handle media loading errors
+  const handleMediaError = (e) => {
+    console.warn('Video player media error:', e);
+    setHasMediaError(true);
+    setIsPlaying(false);
+  };
 
   // Handle ended
   const handleSkipNext = (e) => {
@@ -229,7 +253,7 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
 
   const handleVideoEnded = () => {
     setIsPlaying(false);
-    if (onEnded && autoplay) {
+    if (onEnded && autoplay && !hasMediaError) {
       onEnded();
     }
   };
@@ -275,14 +299,36 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleVideoEnded}
+        onError={handleMediaError}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         className="w-full h-full cursor-pointer object-contain"
         preload="metadata"
       />
 
+      {/* Media Error Overlay */}
+      {hasMediaError && (
+        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center gap-3 p-6 text-center z-20">
+          <div className="p-3 rounded-full bg-red-500/20 text-red-500">
+            <AlertTriangle size={32} />
+          </div>
+          <h3 className="text-white font-bold text-base md:text-lg">Playback Error</h3>
+          <p className="text-brand-muted text-xs max-w-md">
+            This video stream is unavailable or could not be loaded from Cloudinary storage.
+          </p>
+          {onEnded && (
+            <button
+              onClick={onEnded}
+              className="mt-2 px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-bold hover:bg-brand-primary/80 transition-colors cursor-pointer shadow-lg shadow-brand-primary-glow"
+            >
+              Play Next Video
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Big Center Play/Pause indicator overlay */}
-      {!isPlaying && (
+      {!isPlaying && !hasMediaError && (
         <div
           onClick={togglePlay}
           className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer transition-opacity"

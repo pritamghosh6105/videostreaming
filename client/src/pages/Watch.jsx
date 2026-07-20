@@ -269,6 +269,7 @@ const Watch = () => {
         
         {/* Custom video player */}
         <VideoPlayer
+          key={video._id}
           src={getMediaUrl(video.videoFile)}
           thumbnail={getMediaUrl(video.thumbnail)}
           videoId={video._id}

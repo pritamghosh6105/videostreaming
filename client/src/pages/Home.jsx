@@ -84,7 +84,9 @@ const Home = () => {
         const playPromise = heroVideoRef.current.play();
         if (playPromise !== undefined) {
           playPromise.catch((err) => {
-            console.warn('Hero video autoplay error:', err.message);
+            if (err.name !== 'AbortError') {
+              console.warn('Hero video autoplay error:', err.message);
+            }
           });
         }
       } else {
