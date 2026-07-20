@@ -196,11 +196,14 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      const updatedUser = { ...user, avatar: res.data.data.avatar };
+      const rawUrl = res.data.data.avatar;
+      const avatarUrl = rawUrl ? `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : rawUrl;
+
+      const updatedUser = { ...user, avatar: avatarUrl };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
 
-      return { success: true, url: res.data.data.avatar };
+      return { success: true, url: avatarUrl };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Avatar update failed' };
     }
@@ -218,11 +221,14 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      const updatedUser = { ...user, banner: res.data.data.banner };
+      const rawUrl = res.data.data.banner;
+      const bannerUrl = rawUrl ? `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : rawUrl;
+
+      const updatedUser = { ...user, banner: bannerUrl };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
 
-      return { success: true, url: res.data.data.banner };
+      return { success: true, url: bannerUrl };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Banner update failed' };
     }

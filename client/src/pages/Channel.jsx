@@ -138,6 +138,11 @@ const Channel = () => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Show immediate local preview
+    const previewUrl = URL.createObjectURL(file);
+    setChannel(prev => ({ ...prev, avatar: previewUrl }));
+
     try {
       const res = await updateAvatar(file);
       if (res.success) {
@@ -155,6 +160,11 @@ const Channel = () => {
   const handleBannerChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Show immediate local preview
+    const previewUrl = URL.createObjectURL(file);
+    setChannel(prev => ({ ...prev, banner: previewUrl }));
+
     try {
       const res = await updateBanner(file);
       if (res.success) {
