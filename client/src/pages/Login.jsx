@@ -69,6 +69,60 @@ const Login = () => {
     }
   };
 
+  const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const hasRealClientId = !!rawClientId && 
+    rawClientId !== 'your_google_client_id_here.apps.googleusercontent.com' && 
+    rawClientId !== 'mock-google-client-id.apps.googleusercontent.com';
+
+  const triggerRealGoogleLogin = () => {
+    if (window.google?.accounts?.oauth2) {
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: rawClientId,
+        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.access_token) {
+            setLoading(true);
+            try {
+              const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+              });
+              const googleUser = await res.json();
+              const authRes = await googleLogin({
+                email: googleUser.email,
+                fullName: googleUser.name,
+                avatar: googleUser.picture,
+                googleId: googleUser.sub,
+              });
+
+              if (authRes.success) {
+                showToast('Signed in with Google successfully!', 'success');
+                navigate(from, { replace: true });
+              } else {
+                setErrorMsg(authRes.message);
+                showToast(authRes.message || 'Google Sign-in failed.', 'error');
+              }
+            } catch (err) {
+              showToast('Google profile fetch failed.', 'error');
+            } finally {
+              setLoading(false);
+            }
+          }
+        },
+      });
+      client.requestAccessToken();
+    } else {
+      showToast('Google identity service is loading. Please try again in a moment.', 'info');
+    }
+  };
+
+  const handleGoogleClick = () => {
+    if (hasRealClientId) {
+      triggerRealGoogleLogin();
+    } else {
+      handleGoogleSignIn();
+    }
+  };
+
   const handleGoogleSignIn = () => {
     const width = 500;
     const height = 650;
@@ -381,7 +435,7 @@ const Login = () => {
 
           <button
             type="button"
-            onClick={handleGoogleSignIn}
+            onClick={handleGoogleClick}
             className="w-full py-3 bg-white text-black hover:bg-neutral-100 text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border border-neutral-200"
           >
             <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">

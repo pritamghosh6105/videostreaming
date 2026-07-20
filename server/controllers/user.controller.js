@@ -1,9 +1,12 @@
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import Subscription from '../models/Subscription.js';
 import Video from '../models/Video.js';
 import { uploadOnCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
 import { sendPasswordResetEmail, sendRegistrationVerificationEmail } from '../config/mailer.js';
+
+const googleOAuthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Helper to generate JWT Token
 const generateToken = (id) => {
@@ -542,7 +545,27 @@ export const verifyEmail = async (req, res, next) => {
 // @access  Public
 export const googleLogin = async (req, res, next) => {
   try {
-    const { email, fullName, avatar, googleId } = req.body;
+    let { email, fullName, avatar, googleId, credential } = req.body;
+
+    // Verify real Google OAuth credential token if provided
+    if (credential) {
+      try {
+        const ticket = await googleOAuthClient.verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID || undefined,
+        });
+        const payload = ticket.getPayload();
+        email = payload.email;
+        fullName = payload.name;
+        avatar = payload.picture;
+        googleId = payload.sub;
+      } catch (verifyErr) {
+        if (!email || !googleId) {
+          res.status(400);
+          throw new Error('Google token verification failed: ' + verifyErr.message);
+        }
+      }
+    }
 
     if (!email || !fullName || !googleId) {
       res.status(400);

@@ -4,12 +4,13 @@ import { Play, Flame, Heart, Share2, MoreVertical, Plus } from 'lucide-react';
 
 // Utility to resolve local uploaded file URLs
 export const getMediaUrl = (url) => {
-  if (!url) return '';
+  if (!url) return null;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   const base = import.meta.env.VITE_API_URL 
-    ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+    ? import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '') 
     : 'http://localhost:5000';
-  return `${base}${url}`;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${base}${cleanUrl}`;
 };
 
 // Utility to format duration

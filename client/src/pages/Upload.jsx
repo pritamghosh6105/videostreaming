@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Upload, FileVideo, Image, X } from 'lucide-react';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -10,6 +11,7 @@ const UploadVideo = () => {
   useDocumentTitle('Upload Cinematic Video');
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
 
   // Redirect if not logged in
   useEffect(() => {
@@ -76,28 +78,50 @@ const UploadVideo = () => {
     formData.append('videoFile', videoFile);
     formData.append('thumbnail', thumbnailFile);
 
+    // Smooth progress simulation interval reference
+    let processingInterval;
+
     try {
       await api.post('/videos/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 0, // Disable timeout for large file uploads & Cloudinary transcoding
+        timeout: 0,
         onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setProgress(percentCompleted);
-          if (percentCompleted === 100) {
-            setStatusMessage('Assets uploaded. Cloudinary processing & transcoding media, please wait...');
+          if (progressEvent.total) {
+            // Scale Phase 1 (Browser to Backend) to 75%
+            const rawPercent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const scaledPercent = Math.min(75, Math.round(rawPercent * 0.75));
+            setProgress(scaledPercent);
+
+            if (rawPercent >= 100 && !processingInterval) {
+              setStatusMessage('File received by server! Processing & encoding on Cloudinary CDN...');
+              // Animate Phase 2 (Server to Cloudinary) smoothly from 75% to 95%
+              let currentP = 75;
+              processingInterval = setInterval(() => {
+                currentP += 1;
+                if (currentP <= 95) {
+                  setProgress(currentP);
+                } else {
+                  clearInterval(processingInterval);
+                }
+              }, 400);
+            }
           }
         },
       });
 
-      setStatusMessage('Upload completed successfully!');
-      alert('Video uploaded successfully!');
-      navigate('/dashboard');
+      if (processingInterval) clearInterval(processingInterval);
+      setProgress(100);
+      setStatusMessage('Upload & Cloudinary encoding completed!');
+      showToast('Video uploaded successfully!', 'success');
+
+      // Pause 1.2 seconds so user clearly sees 100% completion status
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      navigate('/', { replace: true });
     } catch (err) {
+      if (processingInterval) clearInterval(processingInterval);
       console.error('Upload Error:', err);
       setStatusMessage('');
-      alert(err.response?.data?.message || 'File upload failed. Ensure files are not excessively large.');
+      showToast(err.response?.data?.message || 'File upload failed.', 'error');
     } finally {
       setLoading(false);
     }
@@ -262,23 +286,35 @@ const UploadVideo = () => {
 
       {/* Upload Loader Progress Overlay */}
       {loading && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 text-white p-6">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center z-50 text-white p-6">
           <div className="w-full max-w-sm flex flex-col items-center text-center gap-4">
             <div className="relative flex items-center justify-center">
-              {/* Spinner */}
-              <div className="h-20 w-20 rounded-full border-4 border-white/20 border-t-youtube-red animate-spin" />
-              <span className="absolute text-sm font-bold">{progress}%</span>
+              {progress === 100 ? (
+                <div className="h-20 w-20 rounded-full bg-emerald-500/20 border-4 border-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 animate-bounce">
+                  <span className="text-2xl font-black text-emerald-400">✓</span>
+                </div>
+              ) : (
+                <>
+                  <div className="h-20 w-20 rounded-full border-4 border-white/20 border-t-youtube-red animate-spin" />
+                  <span className="absolute text-sm font-bold">{progress}%</span>
+                </>
+              )}
             </div>
 
             <div className="flex flex-col gap-1 w-full mt-2">
-              <span className="text-sm font-extrabold tracking-wide uppercase">Publishing Video</span>
+              <span className={`text-sm font-extrabold tracking-wide uppercase ${progress === 100 ? 'text-emerald-400' : 'text-white'}`}>
+                {progress === 100 ? 'Upload Completed!' : 'Publishing Video'}
+              </span>
               
               {/* Progress Slider */}
               <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden mt-1">
-                <div style={{ width: `${progress}%` }} className="h-full bg-youtube-red transition-all duration-300" />
+                <div 
+                  style={{ width: `${progress}%` }} 
+                  className={`h-full transition-all duration-300 ${progress === 100 ? 'bg-emerald-500' : 'bg-youtube-red'}`} 
+                />
               </div>
 
-              <span className="text-xs text-white/60 leading-relaxed mt-2 italic px-4 select-none">
+              <span className="text-xs text-white/70 leading-relaxed mt-2 italic px-4 select-none">
                 {statusMessage}
               </span>
             </div>

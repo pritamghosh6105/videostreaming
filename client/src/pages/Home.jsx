@@ -79,13 +79,19 @@ const Home = () => {
   // Ensure video element play/pause status matches isAutoPlayActive state
   useEffect(() => {
     if (heroVideoRef.current) {
+      heroVideoRef.current.muted = isMuted;
       if (isAutoPlayActive) {
-        heroVideoRef.current.play().catch(() => {});
+        const playPromise = heroVideoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('Hero video autoplay error:', err.message);
+          });
+        }
       } else {
         heroVideoRef.current.pause();
       }
     }
-  }, [isAutoPlayActive, currentBannerIndex]);
+  }, [isAutoPlayActive, currentBannerIndex, isMuted]);
 
   // Community Comments
   const [openComments, setOpenComments] = useState({});
@@ -182,7 +188,11 @@ const Home = () => {
       if (reset) {
         setVideos(list);
       } else {
-        setVideos((prev) => [...prev, ...list]);
+        setVideos((prev) => {
+          const existingIds = new Set(prev.map(v => v._id));
+          const uniqueNew = list.filter(v => v && v._id && !existingIds.has(v._id));
+          return [...prev, ...uniqueNew];
+        });
       }
 
       setHasMore(nextPage < pagination.pages);
@@ -391,33 +401,35 @@ const Home = () => {
       {/* 1. Cinematic Hero Banner (Only shown in "All" view) */}
       {activeCategory === 'all' && featuredVideo && (
         <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden select-none bg-black">
-          {/* Muted Autoplay Video Preview background */}
+          {/* Full Video Player background (No Thumbnail) */}
           <div className="absolute inset-0 w-full h-full">
-            <video
-              ref={heroVideoRef}
-              key={featuredVideo._id}
-              src={getMediaUrl(featuredVideo.videoFile)}
-              autoPlay={isAutoPlayActive}
-              muted={isMuted}
-              loop
-              playsInline
-              preload="auto"
-              aria-label="Home hero video player"
-              className="w-full h-full object-cover opacity-65 md:opacity-75 transition-opacity duration-700"
-            />
-            {/* Soft Netflix/Apple TV style Gradient Masks */}
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/50 dark:from-brand-bg via-transparent to-black/30 z-10" />
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-bg/40 dark:from-brand-bg/85 via-transparent to-transparent z-10 hidden md:block" />
+            {getMediaUrl(featuredVideo.videoFile) && (
+              <video
+                ref={heroVideoRef}
+                key={featuredVideo._id}
+                src={getMediaUrl(featuredVideo.videoFile)}
+                autoPlay={isAutoPlayActive}
+                muted={isMuted}
+                loop
+                playsInline
+                preload="auto"
+                aria-label="Home hero video player"
+                className="absolute inset-0 w-full h-full object-cover z-0"
+              />
+            )}
+            {/* Premium Dark Gradient Masks (consistent across Light & Dark mode) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent z-10 hidden md:block" />
           </div>
 
           {/* Left Arrow Button */}
           {bannerVideos.length > 1 && (
             <button
               onClick={handlePrevBanner}
-              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 text-white/40 hover:text-white/90 transition-all duration-300 hover:scale-125 active:scale-90 cursor-pointer"
+              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 text-white/50 hover:text-white transition-all duration-300 hover:scale-125 active:scale-90 cursor-pointer"
               title="Previous Video"
             >
-              <ChevronLeft size={44} className="w-10 h-10 md:w-12 md:h-12" />
+              <ChevronLeft size={44} className="w-10 h-10 md:w-12 md:h-12 drop-shadow" />
             </button>
           )}
 
@@ -425,10 +437,10 @@ const Home = () => {
           {bannerVideos.length > 1 && (
             <button
               onClick={handleNextBanner}
-              className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 text-white/40 hover:text-white/90 transition-all duration-300 hover:scale-125 active:scale-90 cursor-pointer"
+              className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 text-white/50 hover:text-white transition-all duration-300 hover:scale-125 active:scale-90 cursor-pointer"
               title="Next Video"
             >
-              <ChevronRight size={44} className="w-10 h-10 md:w-12 md:h-12" />
+              <ChevronRight size={44} className="w-10 h-10 md:w-12 md:h-12 drop-shadow" />
             </button>
           )}
 
@@ -461,11 +473,11 @@ const Home = () => {
               </span>
             </div>
 
-            <h1 className="text-3xl md:text-6xl font-black tracking-tight text-white leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] line-clamp-2">
+            <h1 className="text-3xl md:text-6xl font-black tracking-tight text-white leading-tight drop-shadow-lg line-clamp-2">
               {featuredVideo.title}
             </h1>
 
-            <p className="text-xs md:text-sm text-brand-muted line-clamp-3 leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-medium max-w-2xl">
+            <p className="text-xs md:text-sm text-gray-200/90 line-clamp-3 leading-relaxed font-normal tracking-wide max-w-2xl text-shadow-sm">
               {featuredVideo.description}
             </p>
 
@@ -480,7 +492,7 @@ const Home = () => {
               
               <button
                 onClick={togglePlayPause}
-                className="p-3 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-xl border border-white/10 text-white backdrop-blur-md smooth-transition cursor-pointer"
+                className="p-3 bg-white/15 hover:bg-white/25 hover:scale-105 rounded-xl border border-white/20 text-white backdrop-blur-md smooth-transition cursor-pointer shadow-md"
                 title={isAutoPlayActive ? 'Pause Video' : 'Play Video'}
               >
                 {isAutoPlayActive ? <Pause size={16} /> : <Play size={16} fill="white" />}
@@ -488,7 +500,7 @@ const Home = () => {
 
               <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-3 bg-white/10 hover:bg-white/20 hover:scale-105 rounded-xl border border-white/10 text-white backdrop-blur-md smooth-transition cursor-pointer"
+                className="p-3 bg-white/15 hover:bg-white/25 hover:scale-105 rounded-xl border border-white/20 text-white backdrop-blur-md smooth-transition cursor-pointer shadow-md"
                 title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}

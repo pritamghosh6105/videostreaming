@@ -36,9 +36,11 @@ export const uploadVideo = async (req, res, next) => {
       throw new Error('Selected category not found');
     }
 
-    // Upload to Cloudinary
-    const videoUpload = await uploadOnCloudinary(req.files.videoFile[0].path, 'video');
-    const thumbnailUpload = await uploadOnCloudinary(req.files.thumbnail[0].path, 'image');
+    // Upload video and thumbnail in parallel to Cloudinary
+    const [videoUpload, thumbnailUpload] = await Promise.all([
+      uploadOnCloudinary(req.files.videoFile[0].path, 'video'),
+      uploadOnCloudinary(req.files.thumbnail[0].path, 'image'),
+    ]);
 
     // Parse tags (comma separated string to array)
     let tagsArray = [];

@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Check if credentials are configure
 const isCloudinaryConfigured = () => {
+  if (process.env.USE_LOCAL_STORAGE === 'true') return false;
   return (
     process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloudinary_cloud_name' &&
@@ -37,31 +37,13 @@ if (isCloudinaryConfigured()) {
  * @returns {Promise<{ url: string, publicId: string }>} Upload details
  */
 export const uploadOnCloudinary = async (localFilePath, resourceType = 'auto') => {
-  try {
-    if (!localFilePath) return null;
+  if (!localFilePath || !fs.existsSync(localFilePath)) return null;
 
-    if (isCloudinaryConfigured()) {
-      const response = await cloudinary.uploader.upload(localFilePath, {
-        resource_type: resourceType,
-        folder: 'youtube_clone',
-      });
-      // Delete local temporary file
-      try {
-        fs.unlinkSync(localFilePath);
-      } catch (err) {
-        console.error('Error deleting local file after Cloudinary upload:', err);
-      }
-      return {
-        url: response.secure_url,
-        publicId: response.public_id,
-        duration: response.duration,
-      };
-    } else {
-      // Local fallback
+  const saveLocally = () => {
+    try {
       const fileName = path.basename(localFilePath);
       const publicDir = path.join(process.cwd(), 'public', 'uploads');
 
-      // Ensure local upload directory exists
       if (!fs.existsSync(publicDir)) {
         fs.mkdirSync(publicDir, { recursive: true });
       }
@@ -69,11 +51,12 @@ export const uploadOnCloudinary = async (localFilePath, resourceType = 'auto') =
       const destPath = path.join(publicDir, fileName);
       fs.copyFileSync(localFilePath, destPath);
 
-      // Delete temporary file
       try {
-        fs.unlinkSync(localFilePath);
+        if (fs.existsSync(localFilePath)) {
+          fs.unlinkSync(localFilePath);
+        }
       } catch (err) {
-        console.error('Error deleting temp file:', err);
+        console.error('Error deleting temp file:', err.message);
       }
 
       return {
@@ -81,19 +64,46 @@ export const uploadOnCloudinary = async (localFilePath, resourceType = 'auto') =
         publicId: fileName,
         duration: 15,
       };
+    } catch (localErr) {
+      console.error('Local file save failed:', localErr);
+      throw new Error(`Local file storage failed: ${localErr.message}`);
     }
-  } catch (error) {
-    console.error('Upload Error:', error);
-    // Try to remove local file
+  };
+
+  if (isCloudinaryConfigured()) {
     try {
-      if (fs.existsSync(localFilePath)) {
-        fs.unlinkSync(localFilePath);
+      console.log(`Uploading ${resourceType} to Cloudinary...`);
+      const response = await cloudinary.uploader.upload(localFilePath, {
+        resource_type: resourceType === 'video' ? 'video' : 'auto',
+        folder: 'youtube_clone',
+        timeout: 120000, // 2 minutes timeout for Cloudinary network request
+      });
+
+      try {
+        if (fs.existsSync(localFilePath)) {
+          fs.unlinkSync(localFilePath);
+        }
+      } catch (err) {
+        console.error('Error deleting local file after Cloudinary upload:', err.message);
       }
-    } catch (unlinkError) {
-      console.error('Failed to delete local file on upload catch:', unlinkError);
+
+      console.log(`Cloudinary upload successful: ${response.secure_url}`);
+      return {
+        url: response.secure_url,
+        publicId: response.public_id,
+        duration: response.duration,
+      };
+    } catch (cloudinaryErr) {
+      console.error('Cloudinary API error:', cloudinaryErr.message);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Falling back to local file storage for development...');
+        return saveLocally();
+      }
+      throw new Error(`Cloudinary upload failed: ${cloudinaryErr.message}`);
     }
-    throw new Error(`File upload failed: ${error.message}`);
   }
+
+  return saveLocally();
 };
 
 /**
