@@ -506,7 +506,10 @@ const AIAssistant = () => {
                       max="640" 
                       value={width} 
                       onChange={(e) => setWidth(parseInt(e.target.value))}
-                      className="w-full h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-youtube-red"
+                      style={{
+                        background: `linear-gradient(to right, #7C3AED ${((width - 320) / (640 - 320)) * 100}%, rgba(255, 255, 255, 0.15) ${((width - 320) / (640 - 320)) * 100}%)`
+                      }}
+                      className="w-full h-1.5 rounded-lg transition-all cursor-pointer"
                     />
                   </div>
                   <div className="space-y-1">
@@ -520,7 +523,10 @@ const AIAssistant = () => {
                       max="850" 
                       value={height} 
                       onChange={(e) => setHeight(parseInt(e.target.value))}
-                      className="w-full h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-youtube-red"
+                      style={{
+                        background: `linear-gradient(to right, #7C3AED ${((height - 400) / (850 - 400)) * 100}%, rgba(255, 255, 255, 0.15) ${((height - 400) / (850 - 400)) * 100}%)`
+                      }}
+                      className="w-full h-1.5 rounded-lg transition-all cursor-pointer"
                     />
                   </div>
                   <p className="text-[10px] text-light-muted dark:text-dark-muted italic">Tip: Drag the top-left corner of the window to resize it dynamically.</p>

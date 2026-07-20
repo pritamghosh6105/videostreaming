@@ -3,19 +3,34 @@ import { useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import VideoCard, { getMediaUrl, formatViews } from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
-import { Filter, SlidersHorizontal } from 'lucide-react';
+import { Filter, SlidersHorizontal, Search as SearchIcon, X } from 'lucide-react';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Search = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   useDocumentTitle(query ? `Search: "${query}"` : 'Search');
 
+  const [localQuery, setLocalQuery] = useState(query);
   const [videos, setVideos] = useState([]);
   const [channels, setChannels] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Sync local query with searchParams
+  useEffect(() => {
+    setLocalQuery(query);
+  }, [query]);
+
+  const handlePageSearch = (e) => {
+    e.preventDefault();
+    if (localQuery.trim()) {
+      setSearchParams({ q: localQuery.trim() });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   // Filters & Sorting states
   const [activeCategory, setActiveCategory] = useState('');
@@ -78,6 +93,41 @@ const Search = () => {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-5xl mx-auto min-h-screen">
+      {/* Page Search Input Box (Visible everywhere, especially on mobile) */}
+      <form onSubmit={handlePageSearch} className="relative w-full">
+        <div className="relative flex items-center">
+          <SearchIcon size={18} className="absolute left-4 text-light-muted dark:text-dark-muted pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Type a query to search movies, creators, tags..."
+            value={localQuery}
+            onChange={(e) => setLocalQuery(e.target.value)}
+            className="w-full pl-11 pr-24 py-3 text-sm md:text-base rounded-2xl bg-light-hover/60 dark:bg-dark-hover/60 border border-light-border dark:border-dark-border text-light-text dark:text-dark-text placeholder-light-muted dark:placeholder-dark-muted focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all shadow-sm font-medium"
+          />
+          <div className="absolute right-2 flex items-center gap-1.5">
+            {localQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalQuery('');
+                  setSearchParams({});
+                }}
+                className="p-1.5 text-light-muted dark:text-dark-muted hover:text-light-text dark:hover:text-dark-text transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
+            <button
+              type="submit"
+              className="px-4 py-2 bg-gradient-to-r from-brand-primary to-brand-pink text-white text-xs font-bold rounded-xl shadow-md shadow-brand-primary-glow hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </form>
+
       {/* Search Header */}
       <div className="flex items-center justify-between border-b border-light-border dark:border-dark-border pb-4">
         <div>

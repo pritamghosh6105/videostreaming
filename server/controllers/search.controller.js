@@ -37,18 +37,48 @@ export const globalSearch = async (req, res, next) => {
     matchQuery.owner = { $nin: bannedUserIds };
 
     if (query.trim()) {
-      matchQuery.$or = [
-        { title: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } }
+      const qTrim = query.trim();
+
+      // Find matching categories by tokens or full query
+      const tokens = qTrim.split(/\s+/).filter((t) => t.length >= 2);
+      const catQueryConditions = tokens.flatMap((t) => [
+        { name: { $regex: t, $options: 'i' } },
+        { slug: { $regex: t, $options: 'i' } }
+      ]);
+      catQueryConditions.push(
+        { name: { $regex: qTrim, $options: 'i' } },
+        { slug: { $regex: qTrim, $options: 'i' } }
+      );
+
+      const matchingCats = await Category.find({
+        $or: catQueryConditions
+      }).select('_id');
+
+      const catIds = matchingCats.map((c) => c._id);
+
+      const searchOr = [
+        { title: { $regex: qTrim, $options: 'i' } },
+        { description: { $regex: qTrim, $options: 'i' } },
+        { tags: { $in: [new RegExp(qTrim, 'i')] } }
       ];
+
+      if (catIds.length > 0) {
+        searchOr.push({ category: { $in: catIds } });
+      }
+
+      matchQuery.$or = searchOr;
     }
 
     // Category filter
     if (activeCategory) {
       let catId = activeCategory;
       if (!mongoose.Types.ObjectId.isValid(activeCategory)) {
-        const cat = await Category.findOne({ slug: activeCategory });
+        const cat = await Category.findOne({
+          $or: [
+            { slug: activeCategory.toLowerCase() },
+            { name: new RegExp(`^${activeCategory}$`, 'i') }
+          ]
+        });
         if (cat) {
           catId = cat._id;
         } else {

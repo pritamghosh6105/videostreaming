@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import {
   Play,
   Pause,
+  Volume1,
   Volume2,
   VolumeX,
   Maximize,
@@ -125,8 +126,9 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
     setVolume(val);
     if (videoRef.current) {
       videoRef.current.volume = val;
-      setIsMuted(val === 0);
-      videoRef.current.muted = val === 0;
+      const mutedState = val === 0;
+      setIsMuted(mutedState);
+      videoRef.current.muted = mutedState;
     }
   };
 
@@ -136,7 +138,11 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
       const nextMute = !isMuted;
       setIsMuted(nextMute);
       videoRef.current.muted = nextMute;
-      videoRef.current.volume = nextMute ? 0 : volume;
+      if (!nextMute) {
+        const restoredVol = volume > 0 ? volume : 0.5;
+        setVolume(restoredVol);
+        videoRef.current.volume = restoredVol;
+      }
     }
   };
 
@@ -324,17 +330,27 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
             )}
 
             <div className="flex items-center gap-2 group/volume">
-              <button onClick={toggleMute} className="hover:text-brand-primary transition-colors cursor-pointer">
-                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              <button onClick={toggleMute} className="hover:text-brand-primary transition-colors cursor-pointer" title={isMuted ? "Unmute" : "Mute"}>
+                {isMuted || volume === 0 ? (
+                  <VolumeX size={18} />
+                ) : volume < 0.5 ? (
+                  <Volume1 size={18} />
+                ) : (
+                  <Volume2 size={18} />
+                )}
               </button>
               <input
                 type="range"
                 min="0"
                 max="1"
-                step="0.05"
+                step="0.02"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="hidden md:inline-block w-0 group-hover/volume:w-16 h-1 rounded-full accent-brand-primary bg-white/30 transition-all duration-300 cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #7C3AED ${(isMuted ? 0 : volume) * 100}%, rgba(255, 255, 255, 0.3) ${(isMuted ? 0 : volume) * 100}%)`
+                }}
+                className="hidden md:inline-block w-0 group-hover/volume:w-20 h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+                aria-label="Volume"
               />
             </div>
 

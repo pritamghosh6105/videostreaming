@@ -23,7 +23,9 @@ import {
   Mic,
   Settings,
   Sparkles,
-  Compass
+  Compass,
+  ArrowLeft,
+  X
 } from 'lucide-react';
 import { getMediaUrl } from './VideoCard';
 
@@ -39,6 +41,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showMegaMenu, setShowMegaMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Auto-suggest states
@@ -241,6 +244,82 @@ const Navbar = ({ toggleSidebar }) => {
         : 'bg-transparent border-transparent'
     } select-none`}>
       
+      {showMobileSearch ? (
+        <div className="flex sm:hidden items-center w-full gap-2 relative">
+          <button
+            onClick={() => setShowMobileSearch(false)}
+            className="h-9 w-9 flex items-center justify-center rounded-xl hover:bg-brand-primary/10 text-brand-text transition-colors shrink-0 cursor-pointer"
+            title="Close Search"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          
+          <form ref={searchRef} onSubmit={(e) => {
+            handleSearchSubmit(e);
+            setShowMobileSearch(false);
+          }} className="flex-grow flex items-center relative">
+            <input
+              type="text"
+              placeholder="Search movies, creators, tags..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              autoFocus
+              className="w-full pl-4 pr-20 py-2 text-xs rounded-full bg-brand-card/90 border border-brand-primary text-brand-text placeholder-brand-muted focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            />
+            <div className="absolute right-1.5 flex items-center gap-1">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="p-1 text-brand-muted hover:text-brand-text cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={startVoiceSearch}
+                className={`p-1 rounded-full ${isListening ? 'text-red-500 animate-pulse bg-red-500/10' : 'text-brand-muted hover:text-brand-text'}`}
+              >
+                <Mic size={14} />
+              </button>
+              <button
+                type="submit"
+                className="p-1.5 rounded-full bg-brand-primary text-white cursor-pointer shadow-md shadow-brand-primary-glow"
+              >
+                <Search size={12} />
+              </button>
+            </div>
+
+            {/* Suggestions List on Mobile */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl premium-glass overflow-hidden flex flex-col z-50 text-xs font-semibold shadow-2xl">
+                {suggestions.map((s) => (
+                  <button
+                    key={s._id}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(s.title);
+                      setShowSuggestions(false);
+                      setShowMobileSearch(false);
+                      navigate(`/search?q=${encodeURIComponent(s.title)}`);
+                    }}
+                    className="w-full text-left px-4 py-2.5 hover:bg-brand-primary/5 flex items-center gap-2 text-brand-text border-b border-brand-border transition-colors cursor-pointer"
+                  >
+                    <Search size={12} className="text-brand-muted shrink-0" />
+                    <span className="truncate">{s.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </form>
+        </div>
+      ) : (
+        <>
       {/* Left: Hamburger + Logo */}
       <div className="flex items-center gap-1 sm:gap-4">
         <button
@@ -360,8 +439,9 @@ const Navbar = ({ toggleSidebar }) => {
       <div className="flex items-center gap-1 sm:gap-3">
         {/* Mobile Search Icon */}
         <button
-          onClick={() => navigate('/search')}
+          onClick={() => setShowMobileSearch(true)}
           className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center sm:hidden rounded-xl hover:bg-brand-primary/10 text-brand-text transition-colors cursor-pointer"
+          title="Search"
         >
           <Search className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
         </button>
@@ -515,6 +595,8 @@ const Navbar = ({ toggleSidebar }) => {
           </Link>
         )}
       </div>
+        </>
+      )}
     </header>
   );
 };

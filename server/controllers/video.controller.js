@@ -153,12 +153,37 @@ export const getAllVideos = async (req, res, next) => {
     }
 
     // Search query
-    if (query) {
-      matchRules.$or = [
-        { title: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } },
+    if (query && query.trim()) {
+      const qTrim = query.trim();
+
+      // Find matching categories by tokens or full query
+      const tokens = qTrim.split(/\s+/).filter((t) => t.length >= 2);
+      const catQueryConditions = tokens.flatMap((t) => [
+        { name: { $regex: t, $options: 'i' } },
+        { slug: { $regex: t, $options: 'i' } }
+      ]);
+      catQueryConditions.push(
+        { name: { $regex: qTrim, $options: 'i' } },
+        { slug: { $regex: qTrim, $options: 'i' } }
+      );
+
+      const matchingCats = await Category.find({
+        $or: catQueryConditions
+      }).select('_id');
+
+      const catIds = matchingCats.map((c) => c._id);
+
+      const searchOr = [
+        { title: { $regex: qTrim, $options: 'i' } },
+        { description: { $regex: qTrim, $options: 'i' } },
+        { tags: { $in: [new RegExp(qTrim, 'i')] } }
       ];
+
+      if (catIds.length > 0) {
+        searchOr.push({ category: { $in: catIds } });
+      }
+
+      matchRules.$or = searchOr;
     }
 
     pipeline.push({ $match: matchRules });
