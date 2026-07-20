@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Video, Eye, ArrowRight, Play, Trash2, Ban } from 'lucide-react';
 import api from '../services/api';
-import { getMediaUrl, formatViews, formatRelativeTime, formatDuration } from '../components/VideoCard';
+import { getMediaUrl, formatViews, formatSubscribers, formatRelativeTime, formatDuration } from '../components/VideoCard';
 import { useAuth } from '../context/AuthContext';
 
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -234,7 +234,7 @@ const Channels = () => {
                     <div className="flex items-center justify-center md:justify-start gap-4 text-xs font-bold text-light-muted dark:text-dark-muted mt-1 select-none">
                       <span className="flex items-center gap-1.5">
                         <Users size={14} className="text-youtube-red" />
-                        {channel.subscribersCount === 1 ? '1 subscriber' : formatViews(channel.subscribersCount).replace('views', 'subscribers')}
+                        {formatSubscribers(channel.subscribersCount)}
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1.5">

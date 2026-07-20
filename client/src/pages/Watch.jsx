@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import VideoPlayer from '../components/VideoPlayer';
 import CommentSection from '../components/CommentSection';
 import PlaylistModal from '../components/PlaylistModal';
-import VideoCard, { getMediaUrl, formatViews, formatRelativeTime } from '../components/VideoCard';
+import VideoCard, { getMediaUrl, formatViews, formatSubscribers, formatRelativeTime } from '../components/VideoCard';
 import { WatchPageSkeleton } from '../components/Skeletons';
 import { 
   ThumbsUp, 
@@ -298,7 +298,7 @@ const Watch = () => {
                 <CheckCircle size={14} className="text-brand-pink" fill="currentColor" />
               </Link>
               <span className="text-xs text-brand-muted font-bold mt-0.5">
-                {subscribers === 1 ? '1 subscriber' : formatViews(subscribers).replace('views', 'subscribers')}
+                {formatSubscribers(subscribers)}
               </span>
             </div>
 

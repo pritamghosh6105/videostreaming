@@ -38,6 +38,18 @@ export const formatViews = (views) => {
   return `${views} ${views === 1 ? 'view' : 'views'}`;
 };
 
+// Utility to format subscribers
+export const formatSubscribers = (subscribers) => {
+  if (subscribers === undefined || isNaN(subscribers)) return '0 subscribers';
+  if (subscribers >= 1e6) {
+    return `${(subscribers / 1e6).toFixed(1).replace(/\.0$/, '')}M subscribers`;
+  }
+  if (subscribers >= 1e3) {
+    return `${(subscribers / 1e3).toFixed(1).replace(/\.0$/, '')}K subscribers`;
+  }
+  return `${subscribers} ${subscribers === 1 ? 'subscriber' : 'subscribers'}`;
+};
+
 // Utility to calculate relative time
 export const formatRelativeTime = (dateString) => {
   const date = new Date(dateString);

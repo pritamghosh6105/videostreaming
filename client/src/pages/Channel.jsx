@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import VideoCard, { getMediaUrl, formatViews, formatRelativeTime } from '../components/VideoCard';
+import VideoCard, { getMediaUrl, formatViews, formatSubscribers, formatRelativeTime } from '../components/VideoCard';
 import { VideoGridSkeleton } from '../components/Skeletons';
 import { 
   Tv, 
@@ -547,7 +547,7 @@ const Channel = () => {
               @{channel.username}
             </span>
             <div className="flex items-center gap-2 text-xs font-semibold text-light-muted dark:text-dark-muted mt-1">
-              <span>{subscribersCount === 1 ? '1 subscriber' : formatViews(subscribersCount).replace('views', 'subscribers')}</span>
+              <span>{formatSubscribers(subscribersCount)}</span>
               <span>•</span>
               <span>{videos.length} {videos.length === 1 ? 'video' : 'videos'}</span>
             </div>

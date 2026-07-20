@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { getMediaUrl, formatViews } from '../components/VideoCard';
+import { getMediaUrl, formatViews, formatSubscribers } from '../components/VideoCard';
 import {
   ThumbsUp,
   Users,
@@ -209,7 +209,7 @@ const Dashboard = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-brand-muted text-[10px] font-black uppercase tracking-widest">Subscribers</span>
-            <span className="font-extrabold text-lg text-brand-text mt-0.5">{formatViews(subscriberCount).replace('views', '')}</span>
+            <span className="font-extrabold text-lg text-brand-text mt-0.5">{formatSubscribers(subscriberCount)}</span>
           </div>
         </div>
 
@@ -220,7 +220,7 @@ const Dashboard = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-brand-muted text-[10px] font-black uppercase tracking-widest">Total Views</span>
-            <span className="font-extrabold text-lg text-brand-text mt-0.5">{formatViews(totalViews).replace('views', '')}</span>
+            <span className="font-extrabold text-lg text-brand-text mt-0.5">{formatViews(totalViews)}</span>
           </div>
         </div>
 
