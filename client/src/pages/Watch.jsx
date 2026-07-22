@@ -262,9 +262,35 @@ const Watch = () => {
   };
 
   const playNextVideo = () => {
-    if (relatedVideos.length > 0) {
-      const nextVideo = relatedVideos[0];
+    if (relatedVideos.length === 0) return;
+
+    try {
+      const rawHistory = sessionStorage.getItem('vf_watch_stack');
+      const stack = rawHistory ? JSON.parse(rawHistory) : [];
+
+      // Exclude current video and the video played right before it (last 2 played)
+      const currentId = id;
+      const prevId = stack.length >= 2 ? stack[stack.length - 2] : null;
+
+      let candidates = relatedVideos.filter(
+        (v) => v._id !== currentId && v._id !== prevId
+      );
+
+      // Fallback: exclude only current video if not enough candidates
+      if (candidates.length === 0) {
+        candidates = relatedVideos.filter((v) => v._id !== currentId);
+      }
+      if (candidates.length === 0) {
+        candidates = relatedVideos;
+      }
+
+      // Pick a random video from remaining candidates
+      const randomIndex = Math.floor(Math.random() * candidates.length);
+      const nextVideo = candidates[randomIndex];
       navigate(`/watch/${nextVideo._id}`);
+    } catch {
+      const randomIndex = Math.floor(Math.random() * relatedVideos.length);
+      navigate(`/watch/${relatedVideos[randomIndex]._id}`);
     }
   };
 
