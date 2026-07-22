@@ -214,24 +214,20 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
 
     if (videoRef.current && src) {
       let isMounted = true;
-      const timer = setTimeout(() => {
-        if (!isMounted || !videoRef.current) return;
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              if (isMounted) setIsPlaying(true);
-            })
-            .catch((err) => {
-              if (err.name !== 'AbortError') {
-                console.log('Autoplay transition blocked:', err.message);
-              }
-            });
-        }
-      }, 150);
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            if (isMounted) setIsPlaying(true);
+          })
+          .catch((err) => {
+            if (err.name !== 'AbortError') {
+              console.log('Autoplay transition blocked:', err.message);
+            }
+          });
+      }
       return () => {
         isMounted = false;
-        clearTimeout(timer);
       };
     }
   }, [src]);
@@ -303,7 +299,7 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         className="w-full h-full cursor-pointer object-contain"
-        preload="metadata"
+        preload="auto"
       />
 
       {/* Media Error Overlay */}

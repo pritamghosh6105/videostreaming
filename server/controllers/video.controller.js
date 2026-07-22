@@ -321,46 +321,57 @@ export const getVideoById = async (req, res, next) => {
       }
     }
 
-    // Increment view count
+    // Increment view count asynchronously
+    Video.findByIdAndUpdate(id, { $inc: { views: 1 } }).catch((err) =>
+      console.error('Error incrementing views:', err.message)
+    );
     video.views += 1;
-    await video.save();
 
-    // Add to user watch history (if logged in)
+    // Add to user watch history asynchronously (if logged in)
     if (req.user) {
-      await User.findByIdAndUpdate(req.user._id, {
-        $pull: { watchHistory: video._id }, // Remove if already exists (move to front)
-      });
-      await User.findByIdAndUpdate(req.user._id, {
-        $push: { watchHistory: { $each: [video._id], $position: 0 } }, // Push to front
-      });
+      User.findByIdAndUpdate(req.user._id, {
+        $pull: { watchHistory: video._id },
+      })
+        .then(() =>
+          User.findByIdAndUpdate(req.user._id, {
+            $push: { watchHistory: { $each: [video._id], $position: 0 } },
+          })
+        )
+        .catch((err) => console.error('Error updating watch history:', err.message));
     }
 
-    // Determine like & subscription status of the current user
-    let userReaction = null; // 'like', 'dislike', or null
-    let isSubscribed = false;
+    // Determine reaction, subscription status, and total sub count concurrently
+    let userReactionPromise = Promise.resolve(null);
+    let isSubscribedPromise = Promise.resolve(false);
+    let ownerSubscribersCountPromise = Promise.resolve(0);
 
     if (req.user) {
-      const reaction = await Like.findOne({
+      userReactionPromise = Like.findOne({
         video: video._id,
         likedBy: req.user._id,
-      });
-      if (reaction) {
-        userReaction = reaction.type;
-      }
+      })
+        .lean()
+        .then((reaction) => (reaction ? reaction.type : null));
 
       if (video.owner) {
-        const subRecord = await Subscription.findOne({
+        isSubscribedPromise = Subscription.findOne({
           subscriber: req.user._id,
           channel: video.owner._id,
-        });
-        isSubscribed = !!subRecord;
+        })
+          .lean()
+          .then((subRecord) => !!subRecord);
       }
     }
 
-    // Get owner's total subscriber count
-    const ownerSubscribersCount = video.owner
-      ? await Subscription.countDocuments({ channel: video.owner._id })
-      : 0;
+    if (video.owner) {
+      ownerSubscribersCountPromise = Subscription.countDocuments({ channel: video.owner._id });
+    }
+
+    const [userReaction, isSubscribed, ownerSubscribersCount] = await Promise.all([
+      userReactionPromise,
+      isSubscribedPromise,
+      ownerSubscribersCountPromise,
+    ]);
 
     const responseData = {
       ...video.toObject(),
@@ -660,14 +671,17 @@ export const getRecommendedVideos = async (req, res, next) => {
 export const getRelatedVideos = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const video = await Video.findById(id);
+
+    const [video, bannedUsers] = await Promise.all([
+      Video.findById(id).select('category tags').lean(),
+      User.find({ isBanned: true }).select('_id').lean(),
+    ]);
 
     if (!video) {
       res.status(404);
       throw new Error('Video not found');
     }
 
-    const bannedUsers = await User.find({ isBanned: true }).select('_id');
     const bannedUserIds = bannedUsers.map((u) => u._id);
 
     let related = await Video.find({
@@ -676,13 +690,14 @@ export const getRelatedVideos = async (req, res, next) => {
       owner: { $nin: bannedUserIds },
       $or: [
         { category: video.category },
-        { tags: { $in: video.tags } },
+        { tags: { $in: video.tags || [] } },
       ],
     })
       .populate('owner', 'fullName username avatar')
       .populate('category', 'name slug')
       .sort({ views: -1 })
-      .limit(8);
+      .limit(8)
+      .lean();
 
     // Fallback: If we have fewer than 8 related videos, fill the list with other popular published videos
     if (related.length < 8) {
@@ -695,7 +710,8 @@ export const getRelatedVideos = async (req, res, next) => {
         .populate('owner', 'fullName username avatar')
         .populate('category', 'name slug')
         .sort({ views: -1 })
-        .limit(8 - related.length);
+        .limit(8 - related.length)
+        .lean();
 
       related = [...related, ...fallbackVideos];
     }

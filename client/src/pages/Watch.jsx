@@ -53,29 +53,32 @@ const Watch = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const loadVideoData = async () => {
+      setLoading(true);
       try {
-        const [res, relatedRes] = await Promise.all([
-          api.get(`/videos/${id}`),
-          api.get(`/videos/${id}/related`)
-        ]);
+        const res = await api.get(`/videos/${id}`);
+        if (ignore) return;
 
-        if (!ignore) {
-          const data = res.data.data;
-          setVideo(data);
-          setLikes(data.likesCount || 0);
-          setDislikes(data.dislikesCount || 0);
-          setReaction(data.userReaction);
-          setIsSubscribed(data.isSubscribed);
-          setSubscribers(data.owner?.subscribersCount || 0);
-          setRelatedVideos(relatedRes.data.data || []);
-        }
+        const data = res.data.data;
+        setVideo(data);
+        setLikes(data.likesCount || 0);
+        setDislikes(data.dislikesCount || 0);
+        setReaction(data.userReaction);
+        setIsSubscribed(data.isSubscribed);
+        setSubscribers(data.owner?.subscribersCount || 0);
+        setLoading(false);
+
+        // Fetch related videos concurrently so player load isn't delayed
+        api.get(`/videos/${id}/related`)
+          .then((relatedRes) => {
+            if (!ignore) {
+              setRelatedVideos(relatedRes.data.data || []);
+            }
+          })
+          .catch((err) => console.error('Error fetching related videos:', err));
       } catch (err) {
         if (!ignore) {
           console.error('Error fetching watch video details:', err.message);
           setHasError(true);
-        }
-      } finally {
-        if (!ignore) {
           setLoading(false);
         }
       }
