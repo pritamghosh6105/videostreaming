@@ -35,6 +35,9 @@ import LikedVideos from './pages/LikedVideos';
 import PlaylistDetail from './pages/PlaylistDetail';
 import Channels from './pages/Channels';
 import Trending from './pages/Trending';
+import TermsAndConditions from './pages/TermsAndConditions';
+import PrivacyCharter from './pages/PrivacyCharter';
+import CookieSettingsModal from './components/CookieSettingsModal';
 import NotFound from './pages/NotFound';
 
 // Setup TanStack Query Client
@@ -136,6 +139,8 @@ const AppContent = () => {
               <Route path="/playlist/:id" element={<PlaylistDetail />} />
               <Route path="/channels" element={<Channels />} />
               <Route path="/feed/trending" element={<Trending />} />
+              <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/privacy" element={<PrivacyCharter />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
@@ -145,6 +150,9 @@ const AppContent = () => {
       
       {/* Floating AI Panel */}
       <AIAssistant />
+
+      {/* Global Cookie Settings Modal */}
+      <CookieSettingsModal />
     </div>
   );
 };
