@@ -75,23 +75,23 @@ const CookieSettingsModal = () => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-brand-border flex items-center justify-between bg-gradient-to-r from-brand-card via-brand-bg to-brand-card">
+        <div className="p-4 sm:p-6 border-b border-brand-border flex items-center justify-between bg-gradient-to-r from-brand-card via-brand-bg to-brand-card">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-brand-primary/15 text-brand-primary border border-brand-primary/20">
-              <Cookie size={24} />
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-brand-primary/15 text-brand-primary border border-brand-primary/20 shrink-0">
+              <Cookie className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-brand-text flex items-center gap-2">
-                Cookie Settings & Privacy Controls
+              <h3 className="text-sm sm:text-lg font-bold text-brand-text flex items-center gap-2">
+                Cookie Settings & Privacy
               </h3>
-              <p className="text-xs text-brand-muted font-medium mt-0.5">
-                Manage your privacy options and data collection preferences for ViewFlow.
+              <p className="text-[11px] sm:text-xs text-brand-muted font-medium mt-0.5">
+                Manage your privacy options for ViewFlow.
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 rounded-full hover:bg-brand-border/50 text-brand-muted hover:text-brand-text transition-colors"
+            className="p-1.5 sm:p-2 rounded-full hover:bg-brand-border/50 text-brand-muted hover:text-brand-text transition-colors shrink-0"
             title="Close"
           >
             <X size={18} />
@@ -99,25 +99,25 @@ const CookieSettingsModal = () => {
         </div>
 
         {/* Modal Content / Cookie Categories */}
-        <div className="p-6 overflow-y-auto space-y-4 flex-grow custom-scrollbar">
-          <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-3 text-xs text-blue-400 font-medium leading-relaxed">
-            <Info size={18} className="shrink-0 mt-0.5" />
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4 flex-grow custom-scrollbar">
+          <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-2.5 text-[11px] sm:text-xs text-blue-400 font-medium leading-relaxed">
+            <Info size={16} className="shrink-0 mt-0.5" />
             <span>
-              We use cookies and similar technologies to enhance your video playback, remember settings, analyze streaming latency, and offer customized recommendations.
+              We use cookies to enhance video playback, remember settings, analyze streaming latency, and offer customized recommendations.
             </span>
           </div>
 
           {/* Essential Cookies */}
-          <div className="p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex items-center justify-between gap-3">
             <div className="flex-grow space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-brand-text">Strictly Essential Cookies</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-xs sm:text-sm text-brand-text">Strictly Essential Cookies</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                   <Lock size={10} /> Always Active
                 </span>
               </div>
-              <p className="text-xs text-brand-muted leading-relaxed font-medium">
-                Necessary for fundamental site features such as user authentication, JWT session persistence, security verification, and video state recovery.
+              <p className="text-[11px] sm:text-xs text-brand-muted leading-relaxed font-medium">
+                Necessary for authentication, JWT session persistence, security, and video state recovery.
               </p>
             </div>
             <div className="relative inline-flex items-center cursor-not-allowed opacity-80 shrink-0">
@@ -131,16 +131,16 @@ const CookieSettingsModal = () => {
           </div>
 
           {/* Functional & Preference Cookies */}
-          <div className="p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex items-center justify-between gap-3">
             <div className="flex-grow space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-brand-text">Functional & Interface Preferences</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-primary/15 text-brand-primary border border-brand-primary/20">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-xs sm:text-sm text-brand-text">Functional & Interface Preferences</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-brand-primary/15 text-brand-primary border border-brand-primary/20">
                   Optional
                 </span>
               </div>
-              <p className="text-xs text-brand-muted leading-relaxed font-medium">
-                Remembers your custom player volume, dark/light theme, theater mode settings, and sidebar collapse states across browser sessions.
+              <p className="text-[11px] sm:text-xs text-brand-muted leading-relaxed font-medium">
+                Remembers your custom player volume, theme, theater mode, and sidebar states across sessions.
               </p>
             </div>
             <button
@@ -154,16 +154,16 @@ const CookieSettingsModal = () => {
           </div>
 
           {/* Performance & Streaming Analytics */}
-          <div className="p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex items-center justify-between gap-3">
             <div className="flex-grow space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-brand-text">Performance & Streaming Telemetry</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-pink/15 text-brand-pink border border-brand-pink/20">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-xs sm:text-sm text-brand-text">Performance & Streaming Telemetry</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-brand-pink/15 text-brand-pink border border-brand-pink/20">
                   Optional
                 </span>
               </div>
-              <p className="text-xs text-brand-muted leading-relaxed font-medium">
-                Collects anonymous metrics on video buffer health, resolution changes, and network speed to help us optimize server performance.
+              <p className="text-[11px] sm:text-xs text-brand-muted leading-relaxed font-medium">
+                Collects anonymous metrics on video buffer health and network speed to optimize playback.
               </p>
             </div>
             <button
@@ -177,16 +177,16 @@ const CookieSettingsModal = () => {
           </div>
 
           {/* AI Recommendation & Personalization */}
-          <div className="p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-bg/50 border border-brand-border flex items-center justify-between gap-3">
             <div className="flex-grow space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-brand-text">AI Personalization & Feeds</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-500/15 text-purple-400 border border-purple-500/20">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-xs sm:text-sm text-brand-text">AI Personalization & Feeds</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-purple-500/15 text-purple-400 border border-purple-500/20">
                   Optional
                 </span>
               </div>
-              <p className="text-xs text-brand-muted leading-relaxed font-medium">
-                Allows Google Gemini AI to analyze your watch history and liked videos to generate tailored home recommendations and assistant suggestions.
+              <p className="text-[11px] sm:text-xs text-brand-muted leading-relaxed font-medium">
+                Allows Google Gemini AI to analyze watch history to generate tailored home recommendations.
               </p>
             </div>
             <button

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -48,6 +49,10 @@ const Navbar = ({ toggleSidebar }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState('Listening... Speak now');
+  const recognitionRef = useRef(null);
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
@@ -122,52 +127,110 @@ const Navbar = ({ toggleSidebar }) => {
     }
   };
 
+  // Stop Voice Search Handler
+  const stopVoiceSearch = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (err) {
+        console.error('Error stopping speech recognition:', err);
+      }
+    }
+    setIsListening(false);
+    setVoiceModalOpen(false);
+  };
+
   // Voice Search Handler
   const startVoiceSearch = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      showToast('Voice Search is not supported in your browser.', 'error');
+      showToast('Voice Search is not supported in your browser. Please use Chrome or Edge.', 'error');
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    if (isListening && recognitionRef.current) {
+      stopVoiceSearch();
+      return;
+    }
 
-    setIsListening(true);
-    showToast('Listening for search query...', 'info');
-    
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {
+        // ignore
+      }
+    }
+
     try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = navigator.language || 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 1;
+      recognitionRef.current = recognition;
+
+      setVoiceTranscript('');
+      setVoiceStatus('Speak now');
+      setIsListening(true);
+      setVoiceModalOpen(true);
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceStatus('Speak now');
+      };
+
+      recognition.onresult = (event) => {
+        let interimText = '';
+        let finalResult = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcriptPiece = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalResult += transcriptPiece;
+          } else {
+            interimText += transcriptPiece;
+          }
+        }
+
+        const currentText = finalResult || interimText;
+        setVoiceTranscript(currentText);
+        setSearchQuery(currentText);
+
+        if (finalResult && finalResult.trim()) {
+          setVoiceStatus('Searching...');
+          setTimeout(() => {
+            setIsListening(false);
+            setVoiceModalOpen(false);
+            showToast(`Searching for: "${finalResult.trim()}"`, 'success');
+            navigate(`/search?q=${encodeURIComponent(finalResult.trim())}`);
+          }, 500);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          setVoiceStatus('Mic blocked');
+          showToast('Microphone access blocked. Please enable microphone permissions in browser settings.', 'error');
+        } else if (event.error === 'no-speech') {
+          setVoiceStatus("Didn't catch that");
+        } else {
+          setVoiceStatus('Try again');
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
       recognition.start();
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
       setIsListening(false);
-      showToast('Microphone access failed. Please enable microphone permissions.', 'error');
-      return;
+      setVoiceModalOpen(false);
+      showToast('Microphone access failed. Please enable permissions.', 'error');
     }
-
-    recognition.onresult = (event) => {
-      const voiceResult = event.results[0][0].transcript;
-      setSearchQuery(voiceResult);
-      setIsListening(false);
-      showToast(`Searching for: "${voiceResult}"`, 'success');
-      navigate(`/search?q=${encodeURIComponent(voiceResult.trim())}`);
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-      if (event.error === 'not-allowed') {
-        showToast('Microphone access blocked. Please enable microphone permissions in your browser settings.', 'error');
-      } else {
-        showToast('Could not understand speech. Please try again.', 'error');
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
   };
 
   const renderNotifItem = (notif) => {
@@ -596,6 +659,140 @@ const Navbar = ({ toggleSidebar }) => {
         )}
       </div>
         </>
+      )}
+
+      {/* Theme-Aware Voice Search Overlay Modal (Portal to document.body) */}
+      {voiceModalOpen && createPortal(
+        <div 
+          className={`fixed inset-0 z-[99999] flex items-center justify-center p-4 backdrop-blur-xl animate-fade-in select-none ${
+            isDark ? 'bg-[#0a0b0e]/95' : 'bg-slate-950/85'
+          }`}
+          onClick={stopVoiceSearch}
+        >
+          <div 
+            className={`w-full max-w-sm rounded-3xl p-6 flex flex-col items-center text-center shadow-2xl relative animate-scale-up overflow-hidden transition-all duration-300 ${
+              isDark 
+                ? 'bg-[#1a1c22] border border-cyan-500/30 shadow-cyan-950/40' 
+                : 'bg-white/95 border border-indigo-200 shadow-indigo-500/15 text-slate-800'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close Button */}
+            <button
+              onClick={stopVoiceSearch}
+              className={`absolute top-4 right-4 p-1.5 rounded-full transition-colors cursor-pointer z-20 ${
+                isDark 
+                  ? 'hover:bg-cyan-500/10 text-cyan-400/70 hover:text-cyan-400' 
+                  : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+              }`}
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Top Outlined Pill Badge */}
+            <div className="mt-2 mb-4 relative z-10">
+              <span className={`px-5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+                isDark 
+                  ? 'border border-cyan-400/80 text-cyan-400 shadow-sm shadow-cyan-500/20' 
+                  : 'border border-indigo-500/80 text-indigo-600 bg-indigo-50/80 shadow-sm shadow-indigo-500/10'
+              }`}>
+                {voiceStatus || 'Speak now'}
+              </span>
+            </div>
+
+            {/* Concentric Radar Rings & Golden Mic Visualizer (Responsive Theme) */}
+            <div className="relative w-52 h-52 sm:w-64 sm:h-64 flex items-center justify-center my-2">
+              {/* Animated Radar Pulse Rings when listening (Vibrant Glowing Animations for Dark Mode) */}
+              {isListening && (
+                <>
+                  {/* Outer Expanding Glowing Ring */}
+                  <div className={`absolute w-44 h-44 sm:w-56 sm:h-56 rounded-full border-2 animate-ping pointer-events-none ${
+                    isDark 
+                      ? 'border-cyan-300 shadow-[0_0_30px_rgba(34,211,238,0.75)]' 
+                      : 'border-indigo-500/60 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+                  }`} />
+                  
+                  {/* Inner Pulsing Neon Aura Ring */}
+                  <div className={`absolute w-34 h-34 sm:w-44 sm:h-44 rounded-full border-2 animate-pulse pointer-events-none ${
+                    isDark 
+                      ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_25px_rgba(34,211,238,0.6)]' 
+                      : 'border-indigo-400/80 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+                  }`} />
+
+                  {/* Mid-Wave High Energy Glow */}
+                  <div className={`absolute w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 animate-ping pointer-events-none ${
+                    isDark 
+                      ? 'border-cyan-200 shadow-[0_0_35px_rgba(34,211,238,0.9)]' 
+                      : 'border-indigo-600/50'
+                  }`} style={{ animationDuration: '1.2s' }} />
+                </>
+              )}
+
+              {/* Concentric Circle 4 (Outermost) */}
+              <div className={`absolute w-48 h-48 sm:w-60 sm:h-60 rounded-full border pointer-events-none transition-all ${
+                isDark ? 'border-cyan-400/35 shadow-[0_0_10px_rgba(34,211,238,0.15)]' : 'border-indigo-300/40'
+              }`} />
+              
+              {/* Concentric Circle 3 */}
+              <div className={`absolute w-36 h-36 sm:w-48 sm:h-48 rounded-full border pointer-events-none transition-all ${
+                isDark ? 'border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.2)]' : 'border-indigo-400/50'
+              }`} />
+
+              {/* Concentric Circle 2 */}
+              <div className={`absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full border pointer-events-none transition-all ${
+                isDark ? 'border-cyan-400/70 shadow-[0_0_15px_rgba(34,211,238,0.25)]' : 'border-indigo-500/60'
+              }`} />
+
+              {/* Central Mic Button Circle 1 */}
+              <button
+                onClick={isListening ? stopVoiceSearch : startVoiceSearch}
+                className={`relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer active:scale-95 group ${
+                  isDark 
+                    ? isListening
+                      ? 'border-cyan-300 bg-[#1a1c22] shadow-[0_0_35px_rgba(34,211,238,0.7)] scale-110'
+                      : 'border-cyan-400 bg-[#1a1c22] hover:bg-cyan-500/10 shadow-cyan-500/20' 
+                    : isListening
+                      ? 'border-indigo-600 bg-white shadow-[0_0_25px_rgba(99,102,241,0.6)] scale-110'
+                      : 'border-indigo-600 bg-white hover:bg-indigo-50/80 shadow-indigo-500/20'
+                }`}
+                title={isListening ? "Tap to stop listening" : "Tap to speak"}
+              >
+                {/* Golden Yellow / Amber Mic Icon */}
+                <Mic 
+                  className={`w-8 h-8 sm:w-10 sm:h-10 transition-transform ${
+                    isDark 
+                      ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]' 
+                      : 'text-amber-500'
+                  } ${isListening ? 'animate-pulse scale-110' : 'group-hover:scale-105'}`} 
+                  strokeWidth={2} 
+                />
+              </button>
+            </div>
+
+            {/* Live Transcript Display Box */}
+            <div className={`w-full min-h-[60px] flex items-center justify-center p-3.5 rounded-2xl border shadow-inner mt-2 mb-3 transition-colors ${
+              isDark 
+                ? 'bg-[#121418] border-cyan-500/25' 
+                : 'bg-slate-50 border-indigo-200/80'
+            }`}>
+              {voiceTranscript ? (
+                <p className={`text-sm font-bold tracking-wide animate-fade-in leading-relaxed ${
+                  isDark ? 'text-cyan-300' : 'text-indigo-950'
+                }`}>
+                  "{voiceTranscript}"
+                </p>
+              ) : (
+                <p className={`text-xs font-medium italic ${
+                  isDark ? 'text-brand-muted' : 'text-slate-400'
+                }`}>
+                  {isListening ? "Listening for speech..." : "Tap microphone to search"}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </header>
   );
