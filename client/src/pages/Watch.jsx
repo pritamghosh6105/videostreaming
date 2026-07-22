@@ -261,36 +261,56 @@ const Watch = () => {
     }
   };
 
+  // Fisher-Yates array shuffle utility
+  const shuffleArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
   const playNextVideo = () => {
     if (relatedVideos.length === 0) return;
 
     try {
-      const rawHistory = sessionStorage.getItem('vf_watch_stack');
-      const stack = rawHistory ? JSON.parse(rawHistory) : [];
+      const rawQueue = sessionStorage.getItem('vf_shuffle_queue');
+      let queue = rawQueue ? JSON.parse(rawQueue) : [];
 
-      // Exclude current video and the video played right before it (last 2 played)
       const currentId = id;
-      const prevId = stack.length >= 2 ? stack[stack.length - 2] : null;
+      let currentIndex = queue.indexOf(currentId);
 
-      let candidates = relatedVideos.filter(
-        (v) => v._id !== currentId && v._id !== prevId
-      );
+      // If current video is not in queue, or we reached the end of the shuffled queue, generate a new shuffled queue!
+      if (currentIndex === -1 || currentIndex >= queue.length - 1) {
+        const allCandidateIds = Array.from(
+          new Set([currentId, ...relatedVideos.map((v) => v._id)])
+        );
 
-      // Fallback: exclude only current video if not enough candidates
-      if (candidates.length === 0) {
-        candidates = relatedVideos.filter((v) => v._id !== currentId);
+        // Create a new shuffled queue
+        let newQueue = shuffleArray(allCandidateIds);
+
+        // Ensure current video stays at index 0 so playback advances seamlessly to index 1
+        newQueue = newQueue.filter((vId) => vId !== currentId);
+        newQueue.unshift(currentId);
+
+        queue = newQueue;
+        currentIndex = 0;
+        sessionStorage.setItem('vf_shuffle_queue', JSON.stringify(queue));
       }
-      if (candidates.length === 0) {
-        candidates = relatedVideos;
-      }
 
-      // Pick a random video from remaining candidates
-      const randomIndex = Math.floor(Math.random() * candidates.length);
-      const nextVideo = candidates[randomIndex];
-      navigate(`/watch/${nextVideo._id}`);
-    } catch {
-      const randomIndex = Math.floor(Math.random() * relatedVideos.length);
-      navigate(`/watch/${relatedVideos[randomIndex]._id}`);
+      // Select next video from the shuffled queue
+      const nextVideoId = queue[currentIndex + 1];
+      if (nextVideoId) {
+        navigate(`/watch/${nextVideoId}`);
+      } else {
+        const fallback = relatedVideos.find((v) => v._id !== currentId) || relatedVideos[0];
+        navigate(`/watch/${fallback._id}`);
+      }
+    } catch (err) {
+      console.error('Shuffle queue navigation error:', err);
+      const fallback = relatedVideos.find((v) => v._id !== id) || relatedVideos[0];
+      navigate(`/watch/${fallback._id}`);
     }
   };
 
