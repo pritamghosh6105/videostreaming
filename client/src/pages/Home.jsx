@@ -41,7 +41,7 @@ const Home = () => {
   const selectedCategoryName = activeCategory === 'all' 
     ? '' 
     : categories.find(c => c.slug === activeCategory)?.name;
-  useDocumentTitle(selectedCategoryName ? `Curated Releases: ${selectedCategoryName}` : 'Cinematic Streams');
+  useDocumentTitle(selectedCategoryName ? selectedCategoryName : '');
   
   // Pagination
   const [page, setPage] = useState(1);
