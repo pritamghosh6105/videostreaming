@@ -85,6 +85,19 @@ const Watch = () => {
     };
 
     loadVideoData();
+
+    // Track navigation history stack for Previous video button
+    try {
+      const rawHistory = sessionStorage.getItem('vf_watch_stack');
+      let stack = rawHistory ? JSON.parse(rawHistory) : [];
+      if (stack[stack.length - 1] !== id) {
+        stack.push(id);
+        sessionStorage.setItem('vf_watch_stack', JSON.stringify(stack));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
     return () => {
       ignore = true;
     };
@@ -249,15 +262,27 @@ const Watch = () => {
   };
 
   const playNextVideo = () => {
-    console.log("playNextVideo called. relatedVideos count:", relatedVideos.length);
     if (relatedVideos.length > 0) {
-      const randomIndex = Math.floor(Math.random() * relatedVideos.length);
-      const nextVideo = relatedVideos[randomIndex];
-      console.log("Navigating to next random video:", nextVideo.title, nextVideo._id);
+      const nextVideo = relatedVideos[0];
       navigate(`/watch/${nextVideo._id}`);
-    } else {
-      console.log("No related videos to play next.");
     }
+  };
+
+  const playPreviousVideo = () => {
+    try {
+      const rawHistory = sessionStorage.getItem('vf_watch_stack');
+      let stack = rawHistory ? JSON.parse(rawHistory) : [];
+      if (stack.length > 1) {
+        stack.pop(); // remove current video ID
+        const prevId = stack.pop(); // pop previous video ID
+        sessionStorage.setItem('vf_watch_stack', JSON.stringify(stack));
+        navigate(`/watch/${prevId}`);
+        return;
+      }
+    } catch {
+      // Fallback
+    }
+    navigate(-1);
   };
 
   if (hasError) return <NotFound />;
@@ -277,6 +302,7 @@ const Watch = () => {
           thumbnail={getMediaUrl(video.thumbnail)}
           videoId={video._id}
           onEnded={playNextVideo}
+          onPrevious={playPreviousVideo}
         />
 
         {/* Video Title */}

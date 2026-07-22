@@ -8,13 +8,14 @@ import {
   Maximize,
   Minimize,
   Settings,
+  SkipBack,
   SkipForward,
   HelpCircle,
   AlertTriangle,
   X
 } from 'lucide-react';
 
-const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
+const VideoPlayer = ({ src, thumbnail, onEnded, onPrevious, videoId }) => {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
@@ -239,7 +240,14 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
     setIsPlaying(false);
   };
 
-  // Handle ended
+  // Handle skip previous / next
+  const handleSkipPrevious = (e) => {
+    e.stopPropagation();
+    if (onPrevious) {
+      onPrevious();
+    }
+  };
+
   const handleSkipNext = (e) => {
     e.stopPropagation();
     if (onEnded) {
@@ -254,7 +262,7 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
     }
   };
 
-  // Shortcuts: Space to play, M to mute, F to fullscreen
+  // Shortcuts: Space to play, M to mute, F to fullscreen, P for previous, N for next
   useEffect(() => {
     const handleKeyDown = (e) => {
       const activeEl = document.activeElement.tagName.toLowerCase();
@@ -267,6 +275,10 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
         toggleMute();
       } else if (e.code === 'KeyF') {
         toggleFullscreen();
+      } else if (e.code === 'KeyP' && onPrevious) {
+        onPrevious();
+      } else if (e.code === 'KeyN' && onEnded) {
+        onEnded();
       }
     };
 
@@ -274,7 +286,7 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isPlaying, isMuted, volume, isFullscreen]);
+  }, [isPlaying, isMuted, volume, isFullscreen, onPrevious, onEnded]);
 
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
@@ -360,13 +372,23 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
         {/* Action Controls */}
         <div className="flex items-center justify-between text-white font-semibold text-sm">
           {/* Left Controls */}
-          <div className="flex items-center gap-4">
-            <button onClick={togglePlay} className="hover:text-brand-primary transition-colors cursor-pointer">
+          <div className="flex items-center gap-3 md:gap-4">
+            {onPrevious && (
+              <button
+                onClick={handleSkipPrevious}
+                className="hover:text-brand-primary transition-colors cursor-pointer"
+                title="Play previous video (P)"
+              >
+                <SkipBack size={18} fill="currentColor" />
+              </button>
+            )}
+
+            <button onClick={togglePlay} className="hover:text-brand-primary transition-colors cursor-pointer" title={isPlaying ? "Pause (Space)" : "Play (Space)"}>
               {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
             </button>
 
             {onEnded && (
-              <button onClick={handleSkipNext} className="hover:text-brand-primary transition-colors cursor-pointer" title="Play next video">
+              <button onClick={handleSkipNext} className="hover:text-brand-primary transition-colors cursor-pointer" title="Play next video (N)">
                 <SkipForward size={18} fill="currentColor" />
               </button>
             )}
@@ -473,6 +495,14 @@ const VideoPlayer = ({ src, thumbnail, onEnded, videoId }) => {
               <div className="flex justify-between items-center">
                 <span className="text-brand-muted">Mute / Unmute</span>
                 <kbd className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 shadow text-[10px]">M</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-brand-muted">Previous Video</span>
+                <kbd className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 shadow text-[10px]">P</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-brand-muted">Next Video</span>
+                <kbd className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 shadow text-[10px]">N</kbd>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-brand-muted">Fullscreen Mode</span>
