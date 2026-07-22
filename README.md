@@ -1,14 +1,22 @@
-# ViewFlow: Full-Stack Video Streaming Platform (YouTube Clone)
+# ViewFlow - Full-Stack Video Streaming Platform
 
-ViewFlow is a full-stack, production-ready Video Streaming Platform similar to YouTube. It features user authentication, media upload, streaming, watch history, subscriptions, comments, likes, custom playlists, creators dashboards, and admin moderation utilities.
+ViewFlow is a full-stack, production-ready Video Streaming Platform. It features user authentication, media upload, streaming, watch history, subscriptions, comments, likes, custom playlists, creators dashboards, custom video player with Fisher-Yates Shuffle Queue autoplay, and admin moderation utilities.
 
 ---
 
 ## 🚀 Tech Stack
-- **Frontend**: React.js + Vite, Tailwind CSS, Lucide Icons, Axios, HTML5 Video custom controls, Context APIs.
+- **Frontend**: React.js + Vite, Tailwind CSS, Lucide Icons, Axios, HTML5 Custom Video Player, Context APIs.
 - **Backend**: Node.js, Express.js (MVC architecture), Mongoose, JWT auth, Multer, Morgan logger, Express-rate-limit.
 - **Media Hosting**: Cloudinary (videos & images) with local file storage fallbacks for instant development.
 - **Database**: MongoDB (Atlas) database management.
+
+---
+
+## ✨ Key Features & Enhancements
+- **Fisher-Yates Shuffle Queue Autoplay**: Seamlessly plays next candidate videos without repeating any video until all candidate recommendations are played.
+- **Previous Video Navigation & Session Stack**: `SkipBack` control and keyboard shortcut (`P`) to navigate back through exact watched history.
+- **Optimized Video Player**: Pre-buffering (`preload="auto"`), instant source switching, keyboard shortcuts (`Space`, `M`, `F`, `P`, `N`), playback speed control, and custom controls.
+- **High-Performance Backend**: Parallelized DB read operations with `Promise.all` and asynchronous non-blocking view count & watch history updates.
 
 ---
 
@@ -17,26 +25,26 @@ ViewFlow is a full-stack, production-ready Video Streaming Platform similar to Y
 ```text
 ├── client/                     # Frontend Vite-React App
 │   ├── src/
-│   │   ├── components/         # Reusable Components (Navbar, Player, etc.)
-│   │   ├── context/            # Auth, Theme, Notification Contexts
+│   │   ├── components/         # Reusable Components (Navbar, Player, VideoCard, etc.)
+│   │   ├── context/            # Auth, Theme, Toast, Notification Contexts
 │   │   ├── pages/              # Pages (Home, Watch, Channel, Dashboard, etc.)
 │   │   ├── services/           # API config (Axios client)
 │   │   ├── App.jsx             # Main Router structure
 │   │   ├── main.jsx            # Entry point
-│   │   └── index.css           # Custom styles (theme scrollbars, skeletons)
+│   │   └── index.css           # Custom styles & design tokens
 │   ├── tailwind.config.js
 │   └── package.json
 │
 ├── server/                     # Backend API Server
 │   ├── config/                 # DB & Cloudinary initializers
 │   ├── controllers/            # API controller business logic
-│   ├── middlewares/            # Token verify, Multer parsing, Error catching
-│   ├── models/                 # Mongoose schemas (Users, Videos, etc.)
+│   ├── middlewares/            # Token verify, Multer parsing, Error handling
+│   ├── models/                 # Mongoose schemas (Users, Videos, Comments, etc.)
 │   ├── routes/                 # Express REST endpoint maps
 │   ├── scripts/                # Database seeder scripts
 │   ├── .env.example            # Environment variables template
-│   ├── app.js                  # App route mounting and middlewares configuration
-│   └── index.js                # Listening entry point
+│   ├── app.js                  # App route mounting and middlewares
+│   └── index.js                # Server entry point
 ```
 
 ---
@@ -44,10 +52,10 @@ ViewFlow is a full-stack, production-ready Video Streaming Platform similar to Y
 ## ⚡ Quick Start (Local Development)
 
 ### 1. Database Setup
-Ensure you have a MongoDB instance running locally (typically `mongodb://127.0.0.1:27017/videostreaming`) or a MongoDB Atlas URI string.
+Ensure you have a MongoDB instance running locally (typically `mongodb://127.0.0.1:27017/videostreaming`) or a MongoDB Atlas connection URI string.
 
-### 2. Configure Environment variables
-Navigate to the `server` directory and rename `.env.example` to `.env`. Configure your variables:
+### 2. Configure Environment Variables
+Navigate to the `server` directory and configure `.env`:
 ```bash
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
@@ -58,7 +66,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 FRONTEND_URL=http://localhost:5173
 ```
 > [!NOTE]
-> If Cloudinary credentials are not configured or are left as placeholders, the server automatically falls back to storing uploaded videos and thumbnails locally in `server/public/uploads` and serving them statically!
+> If Cloudinary credentials are not configured or are left as placeholders, the server automatically falls back to storing uploaded videos and thumbnails locally in `server/public/uploads`!
 
 ### 3. Install & Seed Sample Data
 Inside `server/` directory:
@@ -81,7 +89,7 @@ cd client
 # Install dependencies
 npm install
 
-# Start Vite server
+# Start Vite dev server
 npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173) in your browser.
@@ -99,6 +107,6 @@ Running `npm run seed` sets up these testing credentials:
 
 ---
 
-## 📚 Complete API & Deployment Guides
-- Detailed API routes are documented in [API.md](file:///e:/drive/Pritam/OneDrive/Desktop/video%20streaming/API.md).
-- Production deployment guides are in [deployment_guide.md](file:///e:/drive/Pritam/OneDrive/Desktop/video%20streaming/deployment_guide.md).
+## 📚 API & Deployment Documentation
+- Detailed API endpoints are documented in [API.md](file:///e:/drive/Pritam/OneDrive/Desktop/video%20streaming/API.md).
+- Production deployment instructions are in [deployment_guide.md](file:///e:/drive/Pritam/OneDrive/Desktop/video%20streaming/deployment_guide.md).
