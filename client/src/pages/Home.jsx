@@ -419,9 +419,9 @@ const Home = () => {
                 className="absolute inset-0 w-full h-full object-cover z-0"
               />
             )}
-            {/* Premium Dark Gradient Masks (consistent across Light & Dark mode) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent z-10 hidden md:block" />
+            {/* Subtle Gradient Overlay (significantly reduced black effect for video clarity) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent z-10 hidden md:block" />
           </div>
 
           {/* Left Arrow Button */}
